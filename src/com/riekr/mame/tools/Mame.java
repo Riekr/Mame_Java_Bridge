@@ -2,11 +2,11 @@ package com.riekr.mame.tools;
 
 import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.beans.SoftwareLists;
+import com.riekr.mame.config.MameConfig;
 import com.riekr.mame.utils.JaxbUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -17,21 +17,10 @@ import java.util.zip.GZIPOutputStream;
 public class Mame implements Serializable {
 
 	private static Mame _instance;
-	private static final File _exec;
-	private static final Set<File> _romPath = new HashSet<>();
-	private static final File _settingsDir = new File(System.getProperty("user.home"), ".com.riekr.mame");
-	private static final File _mameCache = new File(_settingsDir, "Mame.cache");
-
-	static {
-		File mameRoot = new File("D:\\Giochi\\Mame");
-		_exec = new File(mameRoot, "mame64.exe");
-		for (String s : new String[]{"roms", "SL", "CHD"})
-			_romPath.add(new File(mameRoot, s));
-	}
 
 	@NotNull
 	private static Mame prepare(@NotNull Mame newInstance) {
-		newInstance._execLastModified = _exec.lastModified();
+		newInstance._execLastModified = newInstance._config.exec.lastModified();
 		newInstance.requestCachesWrite();
 		return newInstance;
 	}
@@ -39,26 +28,39 @@ public class Mame implements Serializable {
 	@NotNull
 	public static Mame getInstance() {
 		if (_instance == null) {
-			_instance = loadFromCaches();
-			if (_instance == null)
-				_instance = prepare(new Mame());
-			else if (_instance._execLastModified != _exec.lastModified()) {
-				Mame newInstance = new Mame();
-				if (!newInstance.version().equals(_instance._version))
-					_instance = prepare(newInstance);
-				else
-					prepare(_instance);
-			}
+			MameConfig config = MameConfig.tryDetermine();
+			if (config == null)
+				throw new IllegalStateException("No mame config found");
+			_instance = newInstance(config);
 		}
 		return _instance;
 	}
 
-	private static Mame loadFromCaches() {
+	@NotNull
+	public static Mame newInstance(@NotNull MameConfig config) {
+		Mame res = loadFromCaches(config.cacheFile);
+		if (res == null)
+			res = prepare(new Mame(config));
+		else {
+			if (res._execLastModified != res._config.exec.lastModified()) {
+				Mame newInstance = new Mame(res._config);
+				if (!newInstance.version().equals(res._version))
+					res = prepare(newInstance);
+				else
+					prepare(res);
+			}
+		}
+		return res;
+	}
+
+	private static Mame loadFromCaches(File cacheFile) {
+		if (cacheFile == null)
+			return null;
 		try {
-			if (_mameCache.canRead()) {
-				System.out.println("Loading caches from " + _mameCache);
+			if (cacheFile.canRead()) {
+				System.out.println("Loading caches from " + cacheFile);
 				Mame mame;
-				try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(new FileInputStream(_mameCache)))) {
+				try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(new FileInputStream(cacheFile)))) {
 					mame = (Mame) ois.readObject();
 				}
 				if (mame != null) {
@@ -71,33 +73,40 @@ public class Mame implements Serializable {
 		} catch (InvalidClassException e) {
 			System.err.println("Cache format changed, data invalidated.");
 		} catch (Exception e) {
-			System.err.println("Unable to read " + _mameCache);
+			System.err.println("Unable to read " + cacheFile);
 			e.printStackTrace(System.err);
 		}
 		return null;
 	}
 
 	public void flushCaches() {
-		System.out.println("Writing caches to " + _mameCache);
+		if (_config.cacheFile == null)
+			return;
+		System.out.println("Writing caches to " + _config.cacheFile);
 		try {
 			//noinspection ResultOfMethodCallIgnored
-			_mameCache.getParentFile().mkdirs();
-			try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(_mameCache, false)))) {
+			_config.cacheFile.getParentFile().mkdirs();
+			try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(_config.cacheFile, false)))) {
 				oos.writeObject(this);
 			}
 		} catch (Exception e) {
-			System.err.println("Unable to write " + _mameCache);
+			System.err.println("Unable to write " + _config.cacheFile);
 			e.printStackTrace(System.err);
 		}
 	}
 
 	public void invalidateCaches() {
-		_mameCache.deleteOnExit();
+		if (_config.cacheFile != null)
+			_config.cacheFile.deleteOnExit();
 		_version = null;
 		_softwareLists = null;
 	}
 
+	public Mame(MameConfig config) {
+		_config = config;
+	}
 
+	private MameConfig _config;
 	private SoftwareLists _softwareLists;
 	private long _execLastModified;
 	private String _version;
@@ -105,7 +114,7 @@ public class Mame implements Serializable {
 
 	@NotNull
 	public Set<File> getRomPath() {
-		return _romPath;
+		return _config.romPath;
 	}
 
 	@NotNull
@@ -114,7 +123,7 @@ public class Mame implements Serializable {
 			try {
 				System.out.println("Getting software lists for v" + version());
 				Runtime rt = Runtime.getRuntime();
-				Process proc = rt.exec(_exec + " -getsoftlist", null, _exec.getParentFile());
+				Process proc = rt.exec(_config.exec + " -getsoftlist", null, _config.exec.getParentFile());
 				byte[] buf;
 				try (InputStream is = proc.getInputStream()) {
 					buf = is.readAllBytes();
@@ -138,7 +147,7 @@ public class Mame implements Serializable {
 			try {
 				System.out.println("Getting mame version");
 				Runtime rt = Runtime.getRuntime();
-				Process proc = rt.exec(_exec + " -help", null, _exec.getParentFile());
+				Process proc = rt.exec(_config.exec + " -help", null, _config.exec.getParentFile());
 				// MAME v0.203 (mame0203)
 				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
 					Matcher m = Pattern.compile("MAME\\s+v([0-9.]+)\\s+.*").matcher("");
@@ -159,13 +168,11 @@ public class Mame implements Serializable {
 		return _version;
 	}
 
-	private Mame() {
-	}
-
 	public void requestCachesWrite() {
 		if (!_writeCacheRequested) {
 			_writeCacheRequested = true;
-			Runtime.getRuntime().addShutdownHook(new Thread(() -> _instance.flushCaches()));
+			if (_config.cacheFile != null)
+				Runtime.getRuntime().addShutdownHook(new Thread(this::flushCaches));
 		}
 	}
 }

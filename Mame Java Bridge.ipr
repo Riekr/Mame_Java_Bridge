@@ -2196,6 +2196,9 @@
   <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
     <output url="file://$PROJECT_DIR$/out" />
   </component>
+  <component name="VcsDirectoryMappings">
+    <mapping directory="$PROJECT_DIR$" vcs="Git" />
+  </component>
   <component name="libraryTable">
     <library name="com.sun.xml.bind:jaxb-core:2.3.0.1" type="repository">
       <properties maven-id="com.sun.xml.bind:jaxb-core:2.3.0.1" />

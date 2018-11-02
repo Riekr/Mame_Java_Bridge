@@ -9,7 +9,7 @@ import java.util.stream.Stream;
 
 class FilterableSoftwareList {
 
-	@CommandLine.Parameters(index = "0", descriptionKey = "softwareList", arity = "0")
+	@CommandLine.Parameters(index = "0", descriptionKey = "softwareList", arity = "0..1")
 	public String softwareList;
 
 	@CommandLine.Parameters(index = "1..*", descriptionKey = "softwares")

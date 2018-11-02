@@ -1,7 +1,7 @@
 package com.riekr.mame.callables;
 
-import com.riekr.mame.beans.SoftwareDisk;
 import com.riekr.mame.beans.Software;
+import com.riekr.mame.beans.SoftwareDisk;
 import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.tools.Mame;
 import picocli.CommandLine;
@@ -11,7 +11,7 @@ import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
-@CommandLine.Command(name = "bad-disks", resourceBundle = "com.riekr.mame.callables.cmdline", description = "Lists all software list entries with bad disks (invalid checksum)")
+@CommandLine.Command(name = "bad-disks", description = "Lists all software list entries with bad disks (invalid checksum)")
 public class SL_BadDisks extends FilterableSoftwareList implements Callable<Collection<SoftwareDisk>> {
 
 	@Override

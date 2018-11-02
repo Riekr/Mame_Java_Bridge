@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@CommandLine.Command(name = "merge", resourceBundle = "com.riekr.mame.callables.cmdline", description = "Convert software lists to merged sets (as they should be)")
+@CommandLine.Command(name = "merge", description = "Convert software lists to merged sets (as they should be)")
 public class SL_Merge extends FilterableSoftwareList implements Callable<Collection<Software>> {
 
 	@CommandLine.Option(names = {"-t", "--dry-run"}, descriptionKey = "dryrun")

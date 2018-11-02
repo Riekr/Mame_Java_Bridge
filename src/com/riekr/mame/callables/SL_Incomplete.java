@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
-@CommandLine.Command(name = "incompletes", resourceBundle = "com.riekr.mame.callables.cmdline", description = "Lists all available but incomplete software list entries")
+@CommandLine.Command(name = "incompletes", description = "Lists all available but incomplete software list entries")
 public class SL_Incomplete extends FilterableSoftwareList implements Callable<Collection<Software>> {
 
 	@Override

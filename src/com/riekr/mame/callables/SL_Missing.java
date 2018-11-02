@@ -3,13 +3,14 @@ package com.riekr.mame.callables;
 import com.riekr.mame.beans.Software;
 import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.tools.Mame;
+import com.riekr.mame.utils.CLIUtils;
 import picocli.CommandLine;
 
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "missing", resourceBundle = "com.riekr.mame.callables.cmdline", description = "Lists all unavailable software lists entries")
+@CommandLine.Command(name = "missing", description = "Lists all unavailable software lists entries")
 public class SL_Missing extends FilterableSoftwareList implements Callable<Collection<Software>> {
 
 	@Override
@@ -30,7 +31,7 @@ public class SL_Missing extends FilterableSoftwareList implements Callable<Colle
 
 	public static void main(String... args) {
 		try {
-			CommandLine.call(new SL_Missing(), args);
+			CLIUtils.doMain(new SL_Missing(), args);
 		} catch (Throwable e) {
 			e.printStackTrace(System.err);
 			System.exit(1);

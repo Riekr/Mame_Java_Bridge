@@ -1,5 +1,6 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.tools.MameException;
 import com.riekr.mame.utils.MameXmlChildOf;
 import org.jetbrains.annotations.NotNull;
 
@@ -77,15 +78,15 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 
 	public boolean mergeIntoParent(boolean dryRun) {
 		if (!isClone())
-			throw new UnsupportedOperationException("Can't merge a non clone set");
+			throw new MameException("Can't merge a non clone set (" + this + ')');
 		if (!isAvailable())
-			throw new UnsupportedOperationException("Can't merge an unavailable set");
+			throw new MameException("Can't merge an unavailable set (" + this + ')');
 		System.out.println("Processing " + this);
 		if (dryRun)
 			return false;
 		Set<File> roots = getRoots();
 		if (roots.size() > 1)
-			throw new UnsupportedOperationException("Multiple roots detected for " + this + " in " + roots);
+			throw new MameException("Multiple roots detected for (" + this + ") in " + roots);
 		File root = roots.iterator().next();
 		File parentDir = new File(root.getParent(), cloneof);
 		if (!parentDir.isDirectory() && !parentDir.mkdir()) {

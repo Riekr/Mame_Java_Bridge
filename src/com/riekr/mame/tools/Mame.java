@@ -28,9 +28,9 @@ public class Mame implements Serializable {
 	@NotNull
 	public static Mame getInstance() {
 		if (_instance == null) {
-			MameConfig config = MameConfig.tryDetermine();
+			MameConfig config = MameConfig.getDefault();
 			if (config == null)
-				throw new IllegalStateException("No mame config found");
+				throw new MameException("No default mame config found.");
 			_instance = newInstance(config);
 		}
 		return _instance;
@@ -106,11 +106,11 @@ public class Mame implements Serializable {
 		_config = config;
 	}
 
-	private MameConfig _config;
-	private SoftwareLists _softwareLists;
-	private long _execLastModified;
-	private String _version;
-	private transient boolean _writeCacheRequested = false;
+	private           MameConfig    _config;
+	private           SoftwareLists _softwareLists;
+	private           long          _execLastModified;
+	private           String        _version;
+	private transient boolean       _writeCacheRequested = false;
 
 	@NotNull
 	public Set<File> getRomPath() {

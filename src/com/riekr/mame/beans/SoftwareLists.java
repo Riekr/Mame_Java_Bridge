@@ -15,6 +15,9 @@ public class SoftwareLists extends MameXmlChildOf<Mame> implements Serializable 
 	@XmlElement(name = "softwarelist")
 	public List<SoftwareList> lists;
 
+	// TODO add mameconfig version and check it
+	// TODO check SoftwareLists schema
+
 	@Override
 	public void setParentNode(@NotNull Mame parentNode) {
 		super.setParentNode(parentNode);

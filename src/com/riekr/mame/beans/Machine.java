@@ -1,12 +1,17 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.tools.MameException;
 import com.riekr.mame.utils.MameXmlChildOf;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
+import java.io.File;
 import java.io.Serializable;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.riekr.mame.beans.enYesNo.no;
 import static com.riekr.mame.beans.enYesNo.yes;
@@ -47,7 +52,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	public String manufacturer;
 
 	@XmlElement(name = "rom")
-	public List<MachineRom> roms;
+	private List<MachineRom> _roms;
 
 	@XmlElement(name = "device_ref")
 	public List<MachineDeviceRef> deviceRefs;
@@ -64,16 +69,68 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	@XmlElement(name = "softwarelist")
 	public List<MachineSoftwareList> softwareLists;
 
+	private Machine _parentMachine;
+	private transient Map<File, Set<MachineComponent>> _containers;
+
 	public boolean isBios() {
 		return _isbios.val;
 	}
 
+	@NotNull
+	public Stream<MachineRom> roms() {
+		return _roms == null ? Stream.empty() : _roms.stream();
+	}
+
+	@Nullable
+	public Machine getParentMachine() {
+		if (cloneof == null)
+			return null;
+		if (_parentMachine == null) {
+			Machines machines = getParentNode();
+			List<Machine> res = machines.machines()
+					.filter(m -> cloneof.equals(m.name))
+					.collect(Collectors.toList());
+			switch (res.size()) {
+				case 0:
+					throw new MameException("No parent of " + name + " found");
+				case 1:
+					_parentMachine = res.get(0);
+					machines.getParentNode().requestCachesWrite();
+					break;
+				default:
+					throw new MameException("Found multiple parents of " + name + " " + res);
+			}
+		}
+		return _parentMachine;
+	}
+
+	@NotNull
+	public Map<File, Set<MachineComponent>> getContainers() {
+		return getContainers(false);
+	}
+
+	@NotNull
+	public Map<File, Set<MachineComponent>> getContainers(boolean invalidateCache) {
+		if (_containers == null || invalidateCache) {
+			_containers = new HashMap<>();
+			roms().forEach(rom -> rom.containers(invalidateCache)
+					.forEach(file -> _containers.computeIfAbsent(file, k -> new HashSet<>()).add(rom)));
+			// TODO disks, samples, bios, etc
+		}
+		return _containers;
+	}
+
+
 	@Override
 	public void setParentNode(@NotNull Machines parentNode) {
 		super.setParentNode(parentNode);
-		if (roms != null) {
-			for (MachineRom r : roms)
+		if (_roms != null) {
+			for (MachineRom r : _roms)
 				r.setParentNode(this);
+		}
+		if (samples != null) {
+			for (MachineSample s : samples)
+				s.setParentNode(this);
 		}
 		if (biosSets != null) {
 			for (MachineBiosSet b : biosSets)

@@ -1,11 +1,9 @@
 package com.riekr.mame.beans;
 
-import com.riekr.mame.utils.MameXmlChildOf;
-
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
 
-public class MachineDisk extends MameXmlChildOf<Machine> implements Serializable {
+public class MachineDisk extends MachineComponent implements Serializable {
 
 	@XmlAttribute
 	public String name;
@@ -31,4 +29,8 @@ public class MachineDisk extends MameXmlChildOf<Machine> implements Serializable
 	@XmlAttribute
 	public enYesNo optional = enYesNo.no;
 
+	@Override
+	public enMachineComponentType type() {
+		return enMachineComponentType.DISK;
+	}
 }

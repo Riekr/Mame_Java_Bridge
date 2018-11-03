@@ -1,5 +1,7 @@
 package com.riekr.mame.tools;
 
+import com.riekr.mame.beans.Machine;
+import com.riekr.mame.beans.Machines;
 import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.beans.SoftwareLists;
 import com.riekr.mame.config.MameConfig;
@@ -64,8 +66,6 @@ public class Mame implements Serializable {
 					mame = (Mame) ois.readObject();
 				}
 				if (mame != null) {
-					if (mame._softwareLists != null)
-						mame._softwareLists.setParentNode(mame);
 					System.out.println("Restored cache for version " + mame._version);
 					return mame;
 				}
@@ -106,11 +106,12 @@ public class Mame implements Serializable {
 		_config = config;
 	}
 
-	private           MameConfig    _config;
-	private           SoftwareLists _softwareLists;
-	private           long          _execLastModified;
-	private           String        _version;
-	private transient boolean       _writeCacheRequested = false;
+	private MameConfig _config;
+	private SoftwareLists _softwareLists;
+	private Machines _machines;
+	private long _execLastModified;
+	private String _version;
+	private transient boolean _writeCacheRequested = false;
 
 	@NotNull
 	public Set<File> getRomPath() {
@@ -128,10 +129,11 @@ public class Mame implements Serializable {
 				try (InputStream is = proc.getInputStream()) {
 					buf = is.readAllBytes();
 				}
-				System.out.println("Parsing");
+				System.out.println("Parsing software lists (" + buf.length + " bytes)");
 				_softwareLists = JaxbUtils.unmarshal(buf, SoftwareLists.class);
 				_softwareLists.setParentNode(this);
-				System.out.println("Got " + _softwareLists.lists.size() + " lists");
+				System.out.println("Got " + _softwareLists.lists.size() + " software lists");
+				requestCachesWrite();
 			} catch (Exception e) {
 				System.err.println("Unable to get mame software lists");
 				e.printStackTrace(System.err);
@@ -141,11 +143,35 @@ public class Mame implements Serializable {
 	}
 
 	@NotNull
+	public Stream<Machine> machines() {
+		if (_machines == null) {
+			try {
+				System.out.println("Getting machines for v" + version());
+				Runtime rt = Runtime.getRuntime();
+				Process proc = rt.exec(_config.exec + " -listxml", null, _config.exec.getParentFile());
+				byte[] buf;
+				try (InputStream is = proc.getInputStream()) {
+					buf = is.readAllBytes();
+				}
+				System.out.println("Parsing machines (" + buf.length + " bytes)");
+				_machines = JaxbUtils.unmarshal(buf, Machines.class);
+				_machines.setParentNode(this);
+				System.out.println("Got " + _machines.machines.size() + " machines");
+				requestCachesWrite();
+			} catch (Exception e) {
+				System.err.println("Unable to get mame machines");
+				e.printStackTrace(System.err);
+			}
+		}
+		return _machines.machines == null ? Stream.empty() : _machines.machines.stream();
+	}
+
+	@NotNull
 	public String version() {
 		if (_version == null) {
 			_version = "<undef>";
 			try {
-				System.out.println("Getting mame version");
+				System.out.println("Getting mame version from " + _config.exec);
 				Runtime rt = Runtime.getRuntime();
 				Process proc = rt.exec(_config.exec + " -help", null, _config.exec.getParentFile());
 				// MAME v0.203 (mame0203)

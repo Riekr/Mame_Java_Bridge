@@ -3,9 +3,11 @@ package com.riekr.mame.utils;
 import com.riekr.mame.tools.Mame;
 import org.jetbrains.annotations.NotNull;
 
-public class MameXmlChildOf<ParentType> {
+import java.io.Serializable;
 
-	private transient ParentType _parentNode;
+public class MameXmlChildOf<ParentType> implements Serializable {
+
+	private ParentType _parentNode;
 
 	public void setParentNode(@NotNull ParentType parentNode) {
 		_parentNode = parentNode;

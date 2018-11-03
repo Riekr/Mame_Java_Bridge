@@ -473,6 +473,7 @@
     </list>
     <writeAnnotations>
       <writeAnnotation name="javax.xml.bind.annotation.XmlElement" />
+      <writeAnnotation name="javax.xml.bind.annotation.XmlAttribute" />
     </writeAnnotations>
   </component>
   <component name="InspectionProjectProfileManager">

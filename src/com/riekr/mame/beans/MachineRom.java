@@ -44,19 +44,19 @@ public class MachineRom extends MachineComponent implements Serializable {
 	@XmlAttribute
 	public enYesNo optional = enYesNo.no;
 
-	private transient Set<File> _containers;
+	private transient Set<File> _availableContainers;
 
 	@NotNull
-	public Stream<File> containers() {
-		return containers(false);
+	public Stream<File> availableContainers() {
+		return availableContainers(false);
 	}
 
 	@NotNull
-	public Stream<File> containers(boolean invalidateCache) {
-		if (_containers == null || invalidateCache) {
+	public Stream<File> availableContainers(boolean invalidateCache) {
+		if (_availableContainers == null || invalidateCache) {
 			Machine machine = getParentNode();
 			Mame mame = machine.getParentNode().getParentNode();
-			_containers = new HashSet<>();
+			_availableContainers = new HashSet<>();
 			do {
 				for (File romPath : mame.getRomPath()) {
 					File machineZipFile = new File(romPath, machine.name + ".zip");
@@ -64,7 +64,7 @@ public class MachineRom extends MachineComponent implements Serializable {
 						try (ZipFile machineZip = new ZipFile(machineZipFile)) {
 							ZipEntry romZipEntry = machineZip.getEntry(name);
 							if (romZipEntry != null)
-								_containers.add(machineZipFile);
+								_availableContainers.add(machineZipFile);
 						} catch (Exception e) {
 							System.err.println("Unable to open " + machineZipFile);
 							e.printStackTrace(System.err);
@@ -74,14 +74,14 @@ public class MachineRom extends MachineComponent implements Serializable {
 						if (machineDir.isDirectory()) {
 							File rom = new File(machineDir, name);
 							if (rom.isFile())
-								_containers.add(machineDir);
+								_availableContainers.add(machineDir);
 						}
 					}
 				}
 				machine = machine.getParentMachine();
 			} while (machine != null);
 		}
-		return _containers.stream();
+		return _availableContainers.stream();
 	}
 
 	@Override

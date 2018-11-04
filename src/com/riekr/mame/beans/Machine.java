@@ -70,6 +70,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	public List<MachineSoftwareList> softwareLists;
 
 	private Machine _parentMachine;
+	private Set<Machine> _directClones;
 	private transient Map<File, Set<MachineComponent>> _containers;
 
 	public boolean isBios() {
@@ -79,6 +80,34 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	@NotNull
 	public Stream<MachineRom> roms() {
 		return _roms == null ? Stream.empty() : _roms.stream();
+	}
+
+	@NotNull
+	public Machine getRootMachine() {
+		Machine parent = getParentMachine();
+		if (parent == null)
+			return this;
+		return parent.getRootMachine();
+	}
+
+	@NotNull
+	public Stream<Machine> directClones() {
+		if (_directClones == null) {
+			_directClones = new HashSet<>();
+			getParentNode().machines()
+					.filter(m -> name.equals(m.cloneof))
+					.collect(Collectors.toCollection(() -> _directClones));
+			getParentNode().getParentNode().requestCachesWrite();
+		}
+		return _directClones.stream();
+	}
+
+	@NotNull
+	public Stream<Machine> allClones() {
+		Stream<Machine> res = directClones();
+		for (Machine m : _directClones)
+			res = Stream.concat(res, m.allClones());
+		return res;
 	}
 
 	@Nullable
@@ -105,21 +134,54 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	}
 
 	@NotNull
-	public Map<File, Set<MachineComponent>> getContainers() {
-		return getContainers(false);
+	public Map<File, Set<MachineComponent>> getAvailableContainers() {
+		return getAvailableContainers(false);
 	}
 
 	@NotNull
-	public Map<File, Set<MachineComponent>> getContainers(boolean invalidateCache) {
+	public Map<File, Set<MachineComponent>> getAvailableContainers(boolean invalidateCache) {
 		if (_containers == null || invalidateCache) {
 			_containers = new HashMap<>();
-			roms().forEach(rom -> rom.containers(invalidateCache)
+			roms().forEach(rom -> rom.availableContainers(invalidateCache)
 					.forEach(file -> _containers.computeIfAbsent(file, k -> new HashSet<>()).add(rom)));
 			// TODO disks, samples, bios, etc
 		}
 		return _containers;
 	}
 
+	@NotNull
+	public Map<String, Set<MachineRom>> getSplitRomSet() {
+		Map<String, Set<MachineRom>> res = new LinkedHashMap<>();
+		Machine machine = this;
+		do {
+			Set<MachineRom> components = res.computeIfAbsent(machine.name, val -> new HashSet<>());
+			if (_roms != null)
+				components.addAll(_roms);
+			machine = machine.getParentMachine();
+		} while (machine != null);
+		return res;
+	}
+
+	@NotNull
+	public Map<String, Set<MachineRom>> getMergedRomSet() {
+		Machine parent = getParentMachine();
+		if (parent != null)
+			return parent.getMergedRomSet();
+		Map<String, Set<MachineRom>> res = new LinkedHashMap<>();
+		Set<MachineRom> rootComponents = new TreeSet<>(Comparator.comparing(o -> o.name));
+		res.put(name, rootComponents);
+		if (_roms != null)
+			rootComponents.addAll(_roms);
+		allClones().forEach(cloneMachine -> cloneMachine.roms().forEach(cloneRom -> {
+			if (rootComponents.contains(cloneRom))
+				res.computeIfAbsent(cloneMachine.name, val -> new HashSet<>()).add(cloneRom);
+			else
+				rootComponents.add(cloneRom);
+		}));
+		return res;
+	}
+
+	// TODO full merged
 
 	@Override
 	public void setParentNode(@NotNull Machines parentNode) {

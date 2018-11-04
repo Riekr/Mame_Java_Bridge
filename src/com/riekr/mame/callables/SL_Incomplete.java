@@ -3,6 +3,7 @@ package com.riekr.mame.callables;
 import com.riekr.mame.beans.Software;
 import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.tools.Mame;
+import com.riekr.mame.utils.CLIUtils;
 import picocli.CommandLine;
 
 import java.util.Collection;
@@ -31,7 +32,7 @@ public class SL_Incomplete extends FilterableSoftwareList implements Callable<Co
 
 	public static void main(String... args) {
 		try {
-			CommandLine.call(new SL_Incomplete(), args);
+			CLIUtils.doMain(new SL_Incomplete(), args);
 		} catch (Throwable e) {
 			e.printStackTrace(System.err);
 			System.exit(1);

@@ -2,6 +2,7 @@ package com.riekr.mame.callables;
 
 import com.riekr.mame.beans.Machine;
 import com.riekr.mame.tools.Mame;
+import com.riekr.mame.utils.CLIUtils;
 import picocli.CommandLine;
 
 import java.util.stream.Stream;
@@ -22,7 +23,7 @@ public class M_List implements Runnable {
 
 	public static void main(String... args) {
 		try {
-			CommandLine.run(new M_List(), args);
+			CLIUtils.doMain(new M_List(), args);
 		} catch (Throwable e) {
 			e.printStackTrace(System.err);
 			System.exit(1);

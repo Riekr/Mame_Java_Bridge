@@ -1,5 +1,6 @@
 package com.riekr.mame.utils;
 
+import com.riekr.mame.tools.Mame;
 import com.riekr.mame.tools.MameException;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
@@ -32,6 +33,7 @@ public final class CLIUtils {
 				cl = new CommandLine(new UsageHelp());
 				cl.addMixin(instance.getClass().getSimpleName(), instance);
 			}
+			cl.addMixin("MameConfig", Mame.DEFAULT_CONFIG_FACTORY);
 			cl.setResourceBundle(ResourceBundle.getBundle("com.riekr.mame.callables.cmdline"));
 			try {
 				cl.parseWithHandler(new CommandLine.RunLast(), args);

@@ -4,12 +4,14 @@ import com.riekr.mame.beans.Machine;
 import com.riekr.mame.beans.Machines;
 import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.beans.SoftwareLists;
+import com.riekr.mame.config.ConfigFactory;
 import com.riekr.mame.config.MameConfig;
 import com.riekr.mame.utils.JaxbUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -18,7 +20,14 @@ import java.util.zip.GZIPOutputStream;
 
 public class Mame implements Serializable {
 
-	private static Mame _instance;
+	public static final ConfigFactory DEFAULT_CONFIG_FACTORY = new ConfigFactory();
+	private static Mame _DEFAULT_INSTANCE;
+
+	public static Mame getInstance() {
+		if (_DEFAULT_INSTANCE == null)
+			_DEFAULT_INSTANCE = newInstance(DEFAULT_CONFIG_FACTORY);
+		return _DEFAULT_INSTANCE;
+	}
 
 	@NotNull
 	private static Mame prepare(@NotNull Mame newInstance) {
@@ -28,14 +37,8 @@ public class Mame implements Serializable {
 	}
 
 	@NotNull
-	public static Mame getInstance() {
-		if (_instance == null) {
-			MameConfig config = MameConfig.getDefault();
-			if (config == null)
-				throw new MameException("No default mame config found.");
-			_instance = newInstance(config);
-		}
-		return _instance;
+	public static Mame newInstance(@NotNull Supplier<MameConfig> configSupplier) {
+		return newInstance(configSupplier.get());
 	}
 
 	@NotNull
@@ -102,7 +105,7 @@ public class Mame implements Serializable {
 		_softwareLists = null;
 	}
 
-	public Mame(MameConfig config) {
+	private Mame(MameConfig config) {
 		_config = config;
 	}
 

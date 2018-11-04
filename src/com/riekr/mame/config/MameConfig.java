@@ -9,55 +9,9 @@ import java.util.*;
 
 public class MameConfig implements Serializable {
 
-	private static final String     _defaultCacheId = "Mame";
-	private static       MameConfig _defaultConfig;
-
-	public static void setDefault(MameConfig config) {
-		_defaultConfig = config;
-	}
-
-	public static MameConfig getDefault() {
-		if (_defaultConfig == null)
-			_defaultConfig = tryDetermine();
-		return _defaultConfig;
-	}
-
-	public static MameConfig tryDetermine() {
-		List<String> searchPaths = new ArrayList<>();
-		for (Map.Entry<String, String> e : System.getenv().entrySet()) {
-			if (e.getKey().equalsIgnoreCase("PATH"))
-				Collections.addAll(searchPaths, e.getValue().split("\\Q" + File.pathSeparatorChar + "\\E"));
-		}
-		String ext = "";
-		if (System.getProperty("os.name").toLowerCase().contains("win")) {
-			searchPaths.add("D:\\Giochi\\Mame");
-			ext = ".exe";
-		}
-		for (String path : searchPaths) {
-			File mameRoot = new File(path);
-			if (!mameRoot.isDirectory())
-				continue;
-			for (String exec : new String[]{"mame", "mame64"}) {
-				File execFile = new File(mameRoot, exec + ext);
-				if (!execFile.canExecute())
-					continue;
-				Set<File> romPath = new HashSet<>();
-				// TODO search .ini
-				for (String s : new String[]{"roms", "SL", "CHD"}) {
-					File candidate = new File(mameRoot, s);
-					if (candidate.isDirectory())
-						romPath.add(candidate);
-				}
-				return new MameConfig(execFile, romPath, _defaultCacheId);
-			}
-		}
-		return null;
-	}
-
-	public final @NotNull  File      exec;
-	public final @NotNull  Set<File> romPath;
-	public final @Nullable File      cacheFile;
-
+	public final @NotNull File exec;
+	public final @NotNull Set<File> romPath;
+	public final @Nullable File cacheFile;
 
 	public MameConfig(@NotNull File exec, @Nullable Set<File> romPath, String id) {
 		this.exec = exec;

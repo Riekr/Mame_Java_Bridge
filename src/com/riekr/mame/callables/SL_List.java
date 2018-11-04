@@ -2,6 +2,7 @@ package com.riekr.mame.callables;
 
 import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.tools.Mame;
+import com.riekr.mame.utils.CLIUtils;
 import picocli.CommandLine;
 
 import java.util.stream.Stream;
@@ -18,7 +19,7 @@ public class SL_List extends FilterableSoftwareList implements Runnable {
 
 	public static void main(String... args) {
 		try {
-			CommandLine.run(new SL_List(), args);
+			CLIUtils.doMain(new SL_List(), args);
 		} catch (Throwable e) {
 			e.printStackTrace(System.err);
 			System.exit(1);

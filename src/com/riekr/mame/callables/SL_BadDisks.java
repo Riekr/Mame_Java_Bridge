@@ -4,6 +4,7 @@ import com.riekr.mame.beans.Software;
 import com.riekr.mame.beans.SoftwareDisk;
 import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.tools.Mame;
+import com.riekr.mame.utils.CLIUtils;
 import picocli.CommandLine;
 
 import java.util.Collection;
@@ -34,7 +35,7 @@ public class SL_BadDisks extends FilterableSoftwareList implements Callable<Coll
 
 	public static void main(String... args) {
 		try {
-			CommandLine.call(new SL_BadDisks(), args);
+			CLIUtils.doMain(new SL_BadDisks(), args);
 		} catch (Throwable e) {
 			e.printStackTrace(System.err);
 			System.exit(1);

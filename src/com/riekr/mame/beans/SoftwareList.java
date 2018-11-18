@@ -25,7 +25,7 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 	@XmlElement(name = "software")
 	private List<Software> _softwares;
 
-	private transient Set<File> _roots;
+	private transient volatile Set<File> _roots;
 
 	@Override
 	public void setParentNode(@NotNull SoftwareLists parentNode) {

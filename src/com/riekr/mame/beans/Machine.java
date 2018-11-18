@@ -70,11 +70,11 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	@XmlElement(name = "softwarelist")
 	public List<MachineSoftwareList> softwareLists;
 
-	private Machine _parentMachine;
-	private Set<Machine> _directClones;
-	private Map<String, Set<MachineRom>> _splitRomSet;
-	private Map<String, Set<MachineRom>> _mergedRomSet;
-	private transient Map<File, Set<MachineComponent>> _containers;
+	private volatile Machine _parentMachine;
+	private volatile Set<Machine> _directClones;
+	private volatile Map<String, Set<MachineRom>> _splitRomSet;
+	private volatile Map<String, Set<MachineRom>> _mergedRomSet;
+	private transient volatile Map<File, Set<MachineComponent>> _containers;
 
 	public boolean isBios() {
 		return _isbios.val;
@@ -108,7 +108,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 			getParentNode().machines()
 					.filter(m -> name.equals(m.cloneof))
 					.collect(Collectors.toCollection(() -> _directClones));
-			getParentNode().getParentNode().requestCachesWrite();
+			notifyCachedDataChanged();
 		});
 		return _directClones.stream();
 	}
@@ -135,7 +135,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 					throw new MameException("No parent of " + name + " found");
 				case 1:
 					_parentMachine = res.get(0);
-					machines.getParentNode().requestCachesWrite();
+					notifyCachedDataChanged();
 					break;
 				default:
 					throw new MameException("Found multiple parents of " + name + " " + res);

@@ -45,7 +45,7 @@ public class MachineRom extends MachineComponent implements Serializable {
 	@XmlAttribute
 	public enYesNo optional = enYesNo.no;
 
-	private transient Set<File> _availableContainers;
+	private transient volatile Set<File> _availableContainers;
 
 	@NotNull
 	public Stream<File> availableContainers() {

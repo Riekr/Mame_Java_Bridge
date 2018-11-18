@@ -26,7 +26,7 @@ public class SoftwareDisk extends MameXmlChildOf<SoftwareDiskArea> implements Se
 	public String writeable;
 
 	private Map<File, FileInfo> _filesInfo;
-	private transient Set<File> _files;
+	private transient volatile Set<File> _files;
 
 	@NotNull
 	public Set<File> getFiles() {

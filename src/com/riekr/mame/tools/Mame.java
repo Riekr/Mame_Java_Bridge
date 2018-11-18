@@ -116,10 +116,10 @@ public class Mame implements Serializable {
 	}
 
 	private MameConfig _config;
-	private SoftwareLists _softwareLists;
-	private Machines _machines;
+	private volatile SoftwareLists _softwareLists;
+	private volatile Machines _machines;
+	private volatile String _version;
 	private long _execLastModified;
-	private String _version;
 	private transient final AtomicBoolean _writeCacheRequested = new AtomicBoolean(false);
 
 	@NotNull

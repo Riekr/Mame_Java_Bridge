@@ -39,8 +39,8 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 	@XmlElement(name = "part")
 	private List<SoftwarePart> _parts;
 
-	private Software _parent;
-	private transient Set<File> _roots;
+	private volatile Software _parent;
+	private transient volatile Set<File> _roots;
 
 	@Override
 	public void setParentNode(@NotNull SoftwareList parentNode) {

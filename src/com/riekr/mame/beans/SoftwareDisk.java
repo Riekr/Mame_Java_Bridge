@@ -3,6 +3,7 @@ package com.riekr.mame.beans;
 import com.riekr.mame.tools.ChdMan;
 import com.riekr.mame.utils.MameXmlChildOf;
 import com.riekr.mame.utils.FileInfo;
+import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -29,16 +30,21 @@ public class SoftwareDisk extends MameXmlChildOf<SoftwareDiskArea> implements Se
 
 	@NotNull
 	public Set<File> getFiles() {
-		if (_files == null) {
+		return getFiles(false);
+	}
+
+	@NotNull
+	public Set<File> getFiles(boolean invalidateCache) {
+		Sync.condInit(this, () -> invalidateCache || _files == null, () -> {
 			_files = new HashSet<>();
-			for (File sRoot : getSoftware().getRoots()) {
+			for (File sRoot : getSoftware().getRoots(invalidateCache)) {
 				File candidate = new File(sRoot, name + ".chd");
 				if (candidate.isFile())
 					_files.add(candidate);
 			}
 			if (_filesInfo != null && _filesInfo.keySet().retainAll(_files))
 				notifyCachedDataChanged();
-		}
+		});
 		return _files;
 	}
 
@@ -49,11 +55,19 @@ public class SoftwareDisk extends MameXmlChildOf<SoftwareDiskArea> implements Se
 	}
 
 	public boolean isAvailable() {
-		return getFiles().size() > 0;
+		return isAvailable(false);
+	}
+
+	public boolean isAvailable(boolean invalidateCache) {
+		return getFiles(invalidateCache).size() > 0;
 	}
 
 	public boolean isValid() {
-		Set<File> files = getFiles();
+		return isValid(false);
+	}
+
+	public boolean isValid(boolean invalidateCache) {
+		Set<File> files = getFiles(invalidateCache);
 		if (files.isEmpty())
 			return false;
 		if (files.size() > 1) {
@@ -61,22 +75,24 @@ public class SoftwareDisk extends MameXmlChildOf<SoftwareDiskArea> implements Se
 			for (File f : files)
 				System.err.println("\t" + f);
 		}
-		if (_filesInfo == null)
-			_filesInfo = new HashMap<>();
-		for (File file : files) {
-			FileInfo info = _filesInfo.get(file);
-			if (info == null)
-				_filesInfo.put(file, info = new FileInfo());
-			if (info.sha1 == null || file.lastModified() != info.lastModified) {
-				info.lastModified = file.lastModified();
-				System.out.println("Calculating sha1 of " + file);
-				info.sha1 = ChdMan.sha1(file);
-				notifyCachedDataChanged();
-				if (!info.sha1.equalsIgnoreCase(sha1)) {
-					System.err.println("SHA1 of " + file + " mismatch:");
-					System.err.println("\t" + sha1 + " (mame)");
-					System.err.println("\t" + info.sha1 + " (file)");
-					return false;
+		synchronized (this) {
+			if (_filesInfo == null)
+				_filesInfo = new HashMap<>();
+			for (File file : files) {
+				FileInfo info = _filesInfo.get(file);
+				if (info == null)
+					_filesInfo.put(file, info = new FileInfo());
+				if (info.sha1 == null || file.lastModified() != info.lastModified) {
+					info.lastModified = file.lastModified();
+					System.out.println("Calculating sha1 of " + file);
+					info.sha1 = ChdMan.sha1(file);
+					notifyCachedDataChanged();
+					if (!info.sha1.equalsIgnoreCase(sha1)) {
+						System.err.println("SHA1 of " + file + " mismatch:");
+						System.err.println("\t" + sha1 + " (mame)");
+						System.err.println("\t" + info.sha1 + " (file)");
+						return false;
+					}
 				}
 			}
 		}

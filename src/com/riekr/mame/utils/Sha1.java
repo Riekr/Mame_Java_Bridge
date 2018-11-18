@@ -19,14 +19,12 @@ public class Sha1 {
 	public static String calc(@NotNull File file) {
 		try {
 			MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-			synchronized (file) {
-				try (InputStream input = new FileInputStream(file)) {
-					byte[] buffer = new byte[8192];
-					int len;
-					while ((len = input.read(buffer)) != -1)
-						sha1.update(buffer, 0, len);
-					return hexBinaryAdapter.marshal(sha1.digest());
-				}
+			try (InputStream input = new FileInputStream(file)) {
+				byte[] buffer = new byte[8192];
+				int len;
+				while ((len = input.read(buffer)) != -1)
+					sha1.update(buffer, 0, len);
+				return hexBinaryAdapter.marshal(sha1.digest());
 			}
 		} catch (IOException | NoSuchAlgorithmException e) {
 			throw new MameException("Unable to calculate sha1 of " + file, e);

@@ -2,6 +2,7 @@ package com.riekr.mame.beans;
 
 import com.riekr.mame.tools.MameException;
 import com.riekr.mame.utils.MameXmlChildOf;
+import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -71,6 +72,8 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 
 	private Machine _parentMachine;
 	private Set<Machine> _directClones;
+	private Map<String, Set<MachineRom>> _splitRomSet;
+	private Map<String, Set<MachineRom>> _mergedRomSet;
 	private transient Map<File, Set<MachineComponent>> _containers;
 
 	public boolean isBios() {
@@ -100,13 +103,13 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 
 	@NotNull
 	public Stream<Machine> directClones() {
-		if (_directClones == null) {
+		Sync.condInit(this, () -> _directClones == null, () -> {
 			_directClones = new HashSet<>();
 			getParentNode().machines()
 					.filter(m -> name.equals(m.cloneof))
 					.collect(Collectors.toCollection(() -> _directClones));
 			getParentNode().getParentNode().requestCachesWrite();
-		}
+		});
 		return _directClones.stream();
 	}
 
@@ -122,7 +125,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	public Machine getParentMachine() {
 		if (cloneof == null)
 			return null;
-		if (_parentMachine == null) {
+		Sync.condInit(this, () -> _parentMachine == null, () -> {
 			Machines machines = getParentNode();
 			List<Machine> res = machines.machines()
 					.filter(m -> cloneof.equals(m.name))
@@ -137,7 +140,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 				default:
 					throw new MameException("Found multiple parents of " + name + " " + res);
 			}
-		}
+		});
 		return _parentMachine;
 	}
 
@@ -148,45 +151,53 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 
 	@NotNull
 	public Map<File, Set<MachineComponent>> getAvailableContainers(boolean invalidateCache) {
-		if (_containers == null || invalidateCache) {
+		Sync.condInit(this, () -> _containers == null || invalidateCache, () -> {
 			_containers = new HashMap<>();
 			roms().forEach(rom -> rom.availableContainers(invalidateCache)
 					.forEach(file -> _containers.computeIfAbsent(file, k -> new HashSet<>()).add(rom)));
 			// TODO disks, samples, bios, etc
-		}
+		});
 		return _containers;
 	}
 
 	@NotNull
 	public Map<String, Set<MachineRom>> getSplitRomSet() {
-		Map<String, Set<MachineRom>> res = new LinkedHashMap<>();
-		Machine machine = this;
-		do {
-			Set<MachineRom> components = res.computeIfAbsent(machine.name, val -> new HashSet<>());
-			if (_roms != null)
-				components.addAll(_roms);
-			machine = machine.getParentMachine();
-		} while (machine != null);
-		return res;
+		Sync.condInit(this, () -> _splitRomSet == null, () -> {
+			_splitRomSet = new LinkedHashMap<>();
+			Machine machine = this;
+			do {
+				Set<MachineRom> components = _splitRomSet.computeIfAbsent(machine.name, val -> new HashSet<>());
+				if (_roms != null)
+					components.addAll(_roms);
+				machine = machine.getParentMachine();
+			} while (machine != null);
+			notifyCachedDataChanged();
+		});
+		return _splitRomSet;
 	}
 
 	@NotNull
 	public Map<String, Set<MachineRom>> getMergedRomSet() {
-		Machine parent = getParentMachine();
-		if (parent != null)
-			return parent.getMergedRomSet();
-		Map<String, Set<MachineRom>> res = new LinkedHashMap<>();
-		Set<MachineRom> rootComponents = new TreeSet<>(Comparator.comparing(o -> o.name));
-		res.put(name, rootComponents);
-		if (_roms != null)
-			rootComponents.addAll(_roms);
-		allClones().forEach(cloneMachine -> cloneMachine.roms().forEach(cloneRom -> {
-			if (rootComponents.contains(cloneRom))
-				res.computeIfAbsent(cloneMachine.name, val -> new HashSet<>()).add(cloneRom);
-			else
-				rootComponents.add(cloneRom);
-		}));
-		return res;
+		Sync.condInit(this, () -> _mergedRomSet == null, () -> {
+			Machine parent = getParentMachine();
+			if (parent != null) {
+				_mergedRomSet = parent.getMergedRomSet();
+				return;
+			}
+			_mergedRomSet = new LinkedHashMap<>();
+			Set<MachineRom> rootComponents = new TreeSet<>(Comparator.comparing(o -> o.name));
+			_mergedRomSet.put(name, rootComponents);
+			if (_roms != null)
+				rootComponents.addAll(_roms);
+			allClones().forEach(cloneMachine -> cloneMachine.roms().forEach(cloneRom -> {
+				if (rootComponents.contains(cloneRom))
+					_mergedRomSet.computeIfAbsent(cloneMachine.name, val -> new HashSet<>()).add(cloneRom);
+				else
+					rootComponents.add(cloneRom);
+			}));
+			notifyCachedDataChanged();
+		});
+		return _mergedRomSet;
 	}
 
 	// TODO full merged

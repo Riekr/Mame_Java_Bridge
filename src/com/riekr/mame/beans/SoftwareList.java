@@ -2,6 +2,7 @@ package com.riekr.mame.beans;
 
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.MameXmlChildOf;
+import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -37,19 +38,28 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 
 	@NotNull
 	public Set<File> getRoots() {
-		if (_roots == null) {
+		return getRoots(false);
+	}
+
+	@NotNull
+	public Set<File> getRoots(boolean invalidateCache) {
+		Sync.condInit(this, () -> _roots == null || invalidateCache, () -> {
 			_roots = new HashSet<>();
 			for (File romPath : Mame.getInstance().getRomPath()) {
 				File candidate = new File(romPath, name);
 				if (candidate.isDirectory())
 					_roots.add(candidate);
 			}
-		}
+		});
 		return _roots;
 	}
 
 	public boolean isAvailable() {
-		return getRoots().size() > 0;
+		return isAvailable(false);
+	}
+
+	public boolean isAvailable(boolean invalidateCache) {
+		return getRoots(invalidateCache).size() > 0;
 	}
 
 	public Stream<Software> softwares() {
@@ -57,7 +67,11 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 	}
 
 	public boolean isComplete() {
-		return softwares().allMatch(Software::isComplete);
+		return isComplete(false);
+	}
+
+	public boolean isComplete(boolean invalidateCache) {
+		return softwares().allMatch(s -> s.isComplete(invalidateCache));
 	}
 
 	@Override

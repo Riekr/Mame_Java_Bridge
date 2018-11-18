@@ -1,6 +1,7 @@
 package com.riekr.mame.beans;
 
 import com.riekr.mame.tools.Mame;
+import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -53,7 +54,7 @@ public class MachineRom extends MachineComponent implements Serializable {
 
 	@NotNull
 	public Stream<File> availableContainers(boolean invalidateCache) {
-		if (_availableContainers == null || invalidateCache) {
+		Sync.condInit(this, () -> _availableContainers == null || invalidateCache, () -> {
 			Machine machine = getParentNode();
 			Mame mame = machine.getParentNode().getParentNode();
 			_availableContainers = new HashSet<>();
@@ -80,7 +81,7 @@ public class MachineRom extends MachineComponent implements Serializable {
 				}
 				machine = machine.getParentMachine();
 			} while (machine != null);
-		}
+		});
 		return _availableContainers.stream();
 	}
 

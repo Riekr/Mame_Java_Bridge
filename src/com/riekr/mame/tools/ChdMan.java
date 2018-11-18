@@ -16,14 +16,12 @@ public class ChdMan {
 		try {
 			Runtime rt = Runtime.getRuntime();
 			Process proc = rt.exec(_exec + " info -i \"" + file + '"');
-			synchronized (file) {
-				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
-					String line;
-					while ((line = reader.readLine()) != null) {
-						System.err.println(line);
-						if (line.startsWith("SHA1:"))
-							return line.substring(5).trim();
-					}
+			try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+				String line;
+				while ((line = reader.readLine()) != null) {
+					// System.err.println(line);
+					if (line.startsWith("SHA1:"))
+						return line.substring(5).trim();
 				}
 			}
 			return "";

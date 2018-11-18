@@ -7,10 +7,12 @@ import com.riekr.mame.beans.SoftwareLists;
 import com.riekr.mame.config.ConfigFactory;
 import com.riekr.mame.config.MameConfig;
 import com.riekr.mame.utils.JaxbUtils;
+import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -85,16 +87,20 @@ public class Mame implements Serializable {
 	public void flushCaches() {
 		if (_config.cacheFile == null)
 			return;
-		System.out.println("Writing caches to " + _config.cacheFile);
-		try {
-			//noinspection ResultOfMethodCallIgnored
-			_config.cacheFile.getParentFile().mkdirs();
-			try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(_config.cacheFile, false)))) {
-				oos.writeObject(this);
+		if (_writeCacheRequested.compareAndSet(true, false)) {
+			synchronized (_config.cacheFile) {
+				System.out.println("Writing caches to " + _config.cacheFile);
+				try {
+					//noinspection ResultOfMethodCallIgnored
+					_config.cacheFile.getParentFile().mkdirs();
+					try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(new FileOutputStream(_config.cacheFile, false)))) {
+						oos.writeObject(this);
+					}
+				} catch (Exception e) {
+					System.err.println("Unable to write " + _config.cacheFile);
+					e.printStackTrace(System.err);
+				}
 			}
-		} catch (Exception e) {
-			System.err.println("Unable to write " + _config.cacheFile);
-			e.printStackTrace(System.err);
 		}
 	}
 
@@ -114,7 +120,7 @@ public class Mame implements Serializable {
 	private Machines _machines;
 	private long _execLastModified;
 	private String _version;
-	private transient boolean _writeCacheRequested = false;
+	private transient final AtomicBoolean _writeCacheRequested = new AtomicBoolean(false);
 
 	@NotNull
 	public Set<File> getRomPath() {
@@ -123,7 +129,7 @@ public class Mame implements Serializable {
 
 	@NotNull
 	public Stream<SoftwareList> softwareLists() {
-		if (_softwareLists == null) {
+		Sync.condInit(this, () -> _softwareLists == null, () -> {
 			try {
 				System.out.println("Getting software lists for v" + version());
 				Runtime rt = Runtime.getRuntime();
@@ -141,13 +147,13 @@ public class Mame implements Serializable {
 				System.err.println("Unable to get mame software lists");
 				e.printStackTrace(System.err);
 			}
-		}
+		});
 		return _softwareLists.lists == null ? Stream.empty() : _softwareLists.lists.stream();
 	}
 
 	@NotNull
 	public Stream<Machine> machines() {
-		if (_machines == null) {
+		Sync.condInit(this, () -> _machines == null, () -> {
 			try {
 				System.out.println("Getting machines for v" + version());
 				Runtime rt = Runtime.getRuntime();
@@ -165,13 +171,13 @@ public class Mame implements Serializable {
 				System.err.println("Unable to get mame machines");
 				e.printStackTrace(System.err);
 			}
-		}
+		});
 		return _machines.machines == null ? Stream.empty() : _machines.machines.stream();
 	}
 
 	@NotNull
 	public String version() {
-		if (_version == null) {
+		Sync.condInit(this, () -> _version == null, () -> {
 			_version = "<undef>";
 			try {
 				System.out.println("Getting mame version from " + _config.exec);
@@ -193,13 +199,12 @@ public class Mame implements Serializable {
 				System.err.println("Unable to get mame version");
 				e.printStackTrace(System.err);
 			}
-		}
+		});
 		return _version;
 	}
 
 	public void requestCachesWrite() {
-		if (!_writeCacheRequested) {
-			_writeCacheRequested = true;
+		if (_writeCacheRequested.compareAndSet(false, true)) {
 			if (_config.cacheFile != null)
 				Runtime.getRuntime().addShutdownHook(new Thread(this::flushCaches));
 		}

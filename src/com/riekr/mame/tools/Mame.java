@@ -204,4 +204,9 @@ public class Mame implements Serializable {
 				Runtime.getRuntime().addShutdownHook(new Thread(this::flushCaches));
 		}
 	}
+
+	@Override
+	public String toString() {
+		return _config.exec.getName() + ' ' + _version;
+	}
 }

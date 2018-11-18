@@ -24,11 +24,11 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	@XmlAttribute(name = "isbios")
 	private enYesNo _isbios = no;
 
-	@XmlAttribute
-	public enYesNo isdevice = no;
+	@XmlAttribute(name = "isdevice")
+	private enYesNo _isdevice = no;
 
-	@XmlAttribute
-	public enYesNo ismechanical = no;
+	@XmlAttribute(name = "ismechanical")
+	private enYesNo _ismechanical = no;
 
 	@XmlAttribute
 	public enYesNo runnable = yes;
@@ -75,6 +75,14 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 
 	public boolean isBios() {
 		return _isbios.val;
+	}
+
+	public boolean isDevice() {
+		return _isdevice.val;
+	}
+
+	public boolean isMechanical() {
+		return _ismechanical.val;
 	}
 
 	@NotNull
@@ -204,8 +212,44 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 		}
 	}
 
+	public String getTypeDescr() {
+		StringBuilder res = new StringBuilder();
+		getTypeDescr(res);
+		return res.toString();
+	}
+
+	public void getTypeDescr(@NotNull StringBuilder res) {
+		boolean close = false;
+		if (isBios()) {
+			close = true;
+			res.append('[');
+			res.append("BIOS");
+		}
+		if (isDevice()) {
+			if (!close) {
+				close = true;
+				res.append('[');
+			} else
+				res.append(',');
+			res.append("DEVICE");
+		}
+		if (isMechanical()) {
+			if (!close) {
+				close = true;
+				res.append('[');
+			} else
+				res.append(',');
+			res.append("MECH");
+		}
+		if (close)
+			res.append(']');
+	}
+
 	@Override
 	public String toString() {
-		return name + ": " + description;
+		StringBuilder res = new StringBuilder();
+		res.append(name).append(": ").append(description).append(' ');
+		getTypeDescr(res);
+		return res.toString();
 	}
 }

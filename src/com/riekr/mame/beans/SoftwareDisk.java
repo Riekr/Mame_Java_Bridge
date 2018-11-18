@@ -1,13 +1,12 @@
 package com.riekr.mame.beans;
 
 import com.riekr.mame.tools.ChdMan;
-import com.riekr.mame.utils.FileInfo;
 import com.riekr.mame.utils.MameXmlChildOf;
+import com.riekr.mame.utils.FileInfo;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -71,17 +70,12 @@ public class SoftwareDisk extends MameXmlChildOf<SoftwareDiskArea> implements Se
 			if (info.sha1 == null || file.lastModified() != info.lastModified) {
 				info.lastModified = file.lastModified();
 				System.out.println("Calculating sha1 of " + file);
-				try {
-					info.sha1 = ChdMan.sha1(file);
-					notifyCachedDataChanged();
-					if (!info.sha1.equalsIgnoreCase(sha1)) {
-						System.err.println("SHA1 of " + file + " mismatch:");
-						System.err.println("\t" + sha1 + " (mame)");
-						System.err.println("\t" + info.sha1 + " (file)");
-						return false;
-					}
-				} catch (IOException e) {
-					System.err.println("Unable to calculate sha1 of " + file + " (" + e.getLocalizedMessage() + ")");
+				info.sha1 = ChdMan.sha1(file);
+				notifyCachedDataChanged();
+				if (!info.sha1.equalsIgnoreCase(sha1)) {
+					System.err.println("SHA1 of " + file + " mismatch:");
+					System.err.println("\t" + sha1 + " (mame)");
+					System.err.println("\t" + info.sha1 + " (file)");
 					return false;
 				}
 			}

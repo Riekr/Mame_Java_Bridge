@@ -10,13 +10,23 @@ import java.util.stream.Stream;
 @CommandLine.Command(name = "list", description = "Lists all mame machines")
 public class M_List implements Runnable {
 
-	@CommandLine.Option(names = {"-b", "--bios"})
-	public boolean biosOnly;
+	@CommandLine.Option(names = {"--mechanical", "-m"}, description = "Check only mechanical machines")
+	public boolean mechanical;
+
+	@CommandLine.Option(names = {"--device", "-d"}, description = "Check only device machines")
+	public boolean device;
+
+	@CommandLine.Option(names = {"--bios", "-b"}, description = "Check only bioses")
+	public boolean bios;
 
 	@Override
 	public void run() {
 		Stream<Machine> s = Mame.getInstance().machines();
-		if (biosOnly)
+		if (mechanical)
+			s = s.filter(Machine::isMechanical);
+		if (device)
+			s = s.filter(Machine::isDevice);
+		if (bios)
 			s = s.filter(Machine::isBios);
 		s.forEach(System.out::println);
 	}

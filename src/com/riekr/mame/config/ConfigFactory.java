@@ -48,11 +48,10 @@ public class ConfigFactory implements Supplier<MameConfig> {
 		}
 		if (samplePath == null) {
 			if (mameIni != null)
-				romPath = mameIni.getSamplePath(baseDir);
+				samplePath = mameIni.getSamplePath(baseDir);
 			else
-				romPath = searchPaths(baseDir, "samples");
+				samplePath = searchPaths(baseDir, "samples");
 		}
-		// TODO pass samplepath
 		return new MameConfig(exec, romPath, cacheId);
 	}
 

@@ -3,6 +3,7 @@ package com.riekr.mame.callables;
 import com.riekr.mame.beans.Software;
 import com.riekr.mame.beans.SoftwareDisk;
 import com.riekr.mame.beans.SoftwareList;
+import com.riekr.mame.mixins.ParallelOptions;
 import com.riekr.mame.mixins.SoftwareOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
@@ -18,8 +19,8 @@ import java.util.stream.Stream;
 @CommandLine.Command(name = "bad-disks", description = "Lists all software list entries with bad disks (invalid checksum)")
 public class SL_BadDisks implements Callable<Collection<SoftwareDisk>> {
 
-	@CommandLine.Option(names = "--parallel", description = "Enable multi thread parallel processing, output will not be sorted")
-	public boolean parallel;
+	@CommandLine.Mixin
+	public @NotNull ParallelOptions parallelOptions = new ParallelOptions();
 
 	@CommandLine.Mixin
 	public @NotNull SoftwareOptions softwareOptions = new SoftwareOptions();
@@ -32,8 +33,7 @@ public class SL_BadDisks implements Callable<Collection<SoftwareDisk>> {
 		Stream<SoftwareDisk> s = softwareOptions.filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares), false)
 				.filter(Software::isAvailable)
 				.flatMap(Software::disks);
-		if (parallel)
-			s = s.parallel();
+		s = parallelOptions.parallelize(s);
 		s.forEach(d -> {
 			boolean valid = d.isValid();
 			System.out.println('"' + d.name + "\" " + d.sha1 + ' ' + valid);

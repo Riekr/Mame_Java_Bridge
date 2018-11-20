@@ -9,6 +9,7 @@ import com.riekr.mame.config.MameConfig;
 import com.riekr.mame.utils.JaxbUtils;
 import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.Set;
@@ -23,11 +24,11 @@ import java.util.zip.GZIPOutputStream;
 public class Mame implements Serializable {
 
 	public static final ConfigFactory DEFAULT_CONFIG_FACTORY = new ConfigFactory();
-	private static Mame _DEFAULT_INSTANCE;
+	private static      Mame          _DEFAULT_INSTANCE;
 
 	public static Mame getInstance() {
-		if (_DEFAULT_INSTANCE == null)
-			_DEFAULT_INSTANCE = newInstance(DEFAULT_CONFIG_FACTORY);
+		Sync.condInit(Mame.class, () -> _DEFAULT_INSTANCE == null,
+				() -> _DEFAULT_INSTANCE = newInstance(DEFAULT_CONFIG_FACTORY));
 		return _DEFAULT_INSTANCE;
 	}
 
@@ -45,7 +46,7 @@ public class Mame implements Serializable {
 
 	@NotNull
 	public static Mame newInstance(@NotNull MameConfig config) {
-		Mame res = loadFromCaches(config.cacheFile);
+		Mame res = loadFromCache(config.cacheFile);
 		if (res == null)
 			res = prepare(new Mame(config));
 		else {
@@ -60,20 +61,19 @@ public class Mame implements Serializable {
 		return res;
 	}
 
-	private static Mame loadFromCaches(File cacheFile) {
+	@Nullable
+	private static Mame loadFromCache(@Nullable File cacheFile) {
 		if (cacheFile == null)
 			return null;
 		try {
-			if (cacheFile.canRead()) {
-				System.out.println("Loading caches from " + cacheFile);
-				Mame mame;
-				try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(new FileInputStream(cacheFile)))) {
-					mame = (Mame) ois.readObject();
-				}
-				if (mame != null) {
-					System.out.println("Restored cache for version " + mame._version);
-					return mame;
-				}
+			System.out.println("Loading caches from " + cacheFile);
+			Mame mame;
+			try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(new FileInputStream(cacheFile)))) {
+				mame = (Mame) ois.readObject();
+			}
+			if (mame != null) {
+				System.out.println("Restored cache for version " + mame._version);
+				return mame;
 			}
 		} catch (InvalidClassException e) {
 			System.err.println("Cache format changed, data invalidated.");
@@ -115,11 +115,11 @@ public class Mame implements Serializable {
 		_config = config;
 	}
 
-	private MameConfig _config;
-	private volatile SoftwareLists _softwareLists;
-	private volatile Machines _machines;
-	private volatile String _version;
-	private long _execLastModified;
+	private                 MameConfig    _config;
+	private volatile        SoftwareLists _softwareLists;
+	private volatile        Machines      _machines;
+	private volatile        String        _version;
+	private                 long          _execLastModified;
 	private transient final AtomicBoolean _writeCacheRequested = new AtomicBoolean(false);
 
 	@NotNull

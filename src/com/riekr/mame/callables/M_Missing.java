@@ -2,6 +2,7 @@ package com.riekr.mame.callables;
 
 import com.riekr.mame.beans.Machine;
 import com.riekr.mame.mixins.MachinesOptions;
+import com.riekr.mame.mixins.ParallelOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
 import com.riekr.mame.utils.PrintStreamTee;
@@ -26,8 +27,8 @@ public class M_Missing implements Runnable {
 	@CommandLine.Mixin
 	public @NotNull MachinesOptions machinesOptions = new MachinesOptions();
 
-	@CommandLine.Option(names = "--parallel", description = "Enable multi thread parallel processing")
-	public boolean parallel;
+	@CommandLine.Mixin
+	public @NotNull ParallelOptions parallelOptions = new ParallelOptions();
 
 	@Override
 	public void run() {
@@ -35,8 +36,7 @@ public class M_Missing implements Runnable {
 		if (names != null && !names.isEmpty())
 			s = s.filter(m -> names.contains(m.name));
 		s = machinesOptions.filter(s);
-		if (parallel)
-			s = s.parallel();
+		s = parallelOptions.parallelize(s);
 		s = s.filter(m -> m.getAvailableContainers().isEmpty());
 		AtomicInteger count = new AtomicInteger();
 		PrintStream ps = PrintStreamTee.to(out);

@@ -1,19 +1,24 @@
 package com.riekr.mame.callables;
 
 import com.riekr.mame.beans.SoftwareList;
+import com.riekr.mame.mixins.SoftwareOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
+import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
 import java.util.stream.Stream;
 
 @CommandLine.Command(name = "list", description = "Lists all software list entries")
-public class SL_List extends FilterableSoftwareList implements Runnable {
+public class SL_List implements Runnable {
+
+	@CommandLine.Mixin
+	public @NotNull SoftwareOptions softwareOptions = new SoftwareOptions();
 
 	@Override
 	public void run() {
-		Stream<SoftwareList> softwareListStream = filterSoftwareListStream(Mame.getInstance().softwareLists());
-		filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares))
+		Stream<SoftwareList> softwareListStream = softwareOptions.filterSoftwareListStream(Mame.getInstance().softwareLists());
+		softwareOptions.filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares))
 				.forEach(System.out::println);
 	}
 

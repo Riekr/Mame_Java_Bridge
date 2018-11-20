@@ -3,8 +3,10 @@ package com.riekr.mame.callables;
 import com.riekr.mame.beans.Software;
 import com.riekr.mame.beans.SoftwareDisk;
 import com.riekr.mame.beans.SoftwareList;
+import com.riekr.mame.mixins.SoftwareOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
+import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
 import java.util.Collection;
@@ -14,17 +16,20 @@ import java.util.concurrent.Callable;
 import java.util.stream.Stream;
 
 @CommandLine.Command(name = "bad-disks", description = "Lists all software list entries with bad disks (invalid checksum)")
-public class SL_BadDisks extends FilterableSoftwareList implements Callable<Collection<SoftwareDisk>> {
+public class SL_BadDisks implements Callable<Collection<SoftwareDisk>> {
 
 	@CommandLine.Option(names = "--parallel", description = "Enable multi thread parallel processing, output will not be sorted")
 	public boolean parallel;
 
+	@CommandLine.Mixin
+	public @NotNull SoftwareOptions softwareOptions = new SoftwareOptions();
+
 	@Override
 	public Collection<SoftwareDisk> call() {
 		Collection<SoftwareDisk> res = Collections.synchronizedCollection(new LinkedList<>());
-		Stream<SoftwareList> softwareListStream = filterSoftwareListStream(Mame.getInstance().softwareLists())
+		Stream<SoftwareList> softwareListStream = softwareOptions.filterSoftwareListStream(Mame.getInstance().softwareLists())
 				.filter(SoftwareList::isAvailable);
-		Stream<SoftwareDisk> s = filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares))
+		Stream<SoftwareDisk> s = softwareOptions.filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares))
 				.filter(Software::isAvailable)
 				.flatMap(Software::disks);
 		if (parallel)

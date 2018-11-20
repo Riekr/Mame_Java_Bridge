@@ -7,6 +7,7 @@ import picocli.CommandLine;
 import java.util.stream.Stream;
 
 public class MachinesOptions {
+
 	@CommandLine.Option(names = {"--mechanical", "-m"}, description = "Check only mechanical machines")
 	public boolean mechanical;
 
@@ -18,13 +19,15 @@ public class MachinesOptions {
 
 	@NotNull
 	public Stream<Machine> filter(@NotNull Stream<Machine> s) {
-		if (mechanical)
-			s = s.filter(Machine::isMechanical);
-		if (device)
-			s = s.filter(Machine::isDevice);
-		if (bios)
-			s = s.filter(Machine::isBios);
+		if (mechanical || device || bios) {
+			s = s.filter(m -> {
+				if (mechanical && !m.isMechanical())
+					return false;
+				if (device && !m.isDevice())
+					return false;
+				return !bios || m.isBios();
+			});
+		}
 		return s;
 	}
-
 }

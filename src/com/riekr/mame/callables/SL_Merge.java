@@ -29,7 +29,7 @@ public class SL_Merge implements Callable<Collection<Software>> {
 		softwareOptions.filterSoftwareStream(
 				softwareOptions.filterSoftwareListStream(Mame.getInstance().softwareLists())
 						.filter(SoftwareList::isAvailable)
-						.flatMap(SoftwareList::softwares))
+						.flatMap(SoftwareList::softwares), false)
 				.filter(s -> {
 					checks.incrementAndGet();
 					return s.isClone() && s.isAvailable();

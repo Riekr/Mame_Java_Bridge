@@ -25,7 +25,7 @@ public class SL_Incomplete implements Callable<Collection<Software>> {
 		// software lists
 		Stream<SoftwareList> softwareListStream = softwareOptions.filterSoftwareListStream(Mame.getInstance().softwareLists())
 				.filter(SoftwareList::isAvailable);
-		softwareOptions.filterSoftwareStreamOrAvailable(softwareListStream.flatMap(SoftwareList::softwares))
+		softwareOptions.filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares), true)
 				.filter(s -> !s.isComplete())
 				.forEach(s -> {
 					System.out.println(s);

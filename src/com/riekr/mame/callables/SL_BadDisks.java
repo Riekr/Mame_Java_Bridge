@@ -29,7 +29,7 @@ public class SL_BadDisks implements Callable<Collection<SoftwareDisk>> {
 		Collection<SoftwareDisk> res = Collections.synchronizedCollection(new LinkedList<>());
 		Stream<SoftwareList> softwareListStream = softwareOptions.filterSoftwareListStream(Mame.getInstance().softwareLists())
 				.filter(SoftwareList::isAvailable);
-		Stream<SoftwareDisk> s = softwareOptions.filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares))
+		Stream<SoftwareDisk> s = softwareOptions.filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares), false)
 				.filter(Software::isAvailable)
 				.flatMap(Software::disks);
 		if (parallel)

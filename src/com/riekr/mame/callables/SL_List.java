@@ -18,7 +18,7 @@ public class SL_List implements Runnable {
 	@Override
 	public void run() {
 		Stream<SoftwareList> softwareListStream = softwareOptions.filterSoftwareListStream(Mame.getInstance().softwareLists());
-		softwareOptions.filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares))
+		softwareOptions.filterSoftwareStream(softwareListStream.flatMap(SoftwareList::softwares), false)
 				.forEach(System.out::println);
 	}
 

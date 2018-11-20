@@ -24,8 +24,8 @@ public class SL_Missing implements Callable<Collection<Software>> {
 		softwareOptions.filterSoftwareStream(
 				softwareOptions.filterSoftwareListStream(Mame.getInstance().softwareLists())
 						.filter(SoftwareList::isAvailable)
-						.flatMap(SoftwareList::softwares)
-		).filter(s -> !s.isAvailable())
+						.flatMap(SoftwareList::softwares),
+				false).filter(s -> !s.isAvailable())
 				.forEach(s -> {
 					System.out.println(s);
 					res.add(s);

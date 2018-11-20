@@ -1,9 +1,11 @@
 package com.riekr.mame.callables;
 
 import com.riekr.mame.beans.Machine;
+import com.riekr.mame.mixins.MachinesOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
 import com.riekr.mame.utils.PrintStreamTee;
+import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
 import java.io.File;
@@ -21,16 +23,10 @@ public class M_Missing implements Runnable {
 	@CommandLine.Option(names = "--output", description = "Write output to file <out> in addition to stdout")
 	public File out;
 
-	@CommandLine.Option(names = {"--mechanical", "-m"}, description = "Check only mechanical machines")
-	public boolean mechanical;
+	@CommandLine.Mixin
+	public @NotNull MachinesOptions machinesOptions = new MachinesOptions();
 
-	@CommandLine.Option(names = {"--device", "-d"}, description = "Check only device machines")
-	public boolean device;
-
-	@CommandLine.Option(names = {"--bios", "-b"}, description = "Check only bioses")
-	public boolean bios;
-
-	@CommandLine.Option(names = "--parallel", description = "Enable multi thread parallel processing, output will not be sorted")
+	@CommandLine.Option(names = "--parallel", description = "Enable multi thread parallel processing")
 	public boolean parallel;
 
 	@Override
@@ -38,12 +34,7 @@ public class M_Missing implements Runnable {
 		Stream<Machine> s = Mame.getInstance().machines();
 		if (names != null && !names.isEmpty())
 			s = s.filter(m -> names.contains(m.name));
-		if (mechanical)
-			s = s.filter(Machine::isMechanical);
-		if (device)
-			s = s.filter(Machine::isDevice);
-		if (bios)
-			s = s.filter(Machine::isBios);
+		s = machinesOptions.filter(s);
 		if (parallel)
 			s = s.parallel();
 		s = s.filter(m -> m.getAvailableContainers().isEmpty());

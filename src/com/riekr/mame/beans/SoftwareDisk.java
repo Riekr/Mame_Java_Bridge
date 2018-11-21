@@ -1,6 +1,6 @@
 package com.riekr.mame.beans;
 
-import com.riekr.mame.tools.ChdMan;
+import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.FileInfo;
 import com.riekr.mame.utils.MameXmlChildOf;
 import com.riekr.mame.utils.Sync;
@@ -76,6 +76,7 @@ public class SoftwareDisk extends MameXmlChildOf<SoftwareDiskArea> implements Se
 			for (Path f : files)
 				System.err.println("\t" + f);
 		}
+		Mame mame = getMame();
 		synchronized (this) {
 			if (_filesInfo == null)
 				_filesInfo = new HashMap<>();
@@ -85,7 +86,7 @@ public class SoftwareDisk extends MameXmlChildOf<SoftwareDiskArea> implements Se
 				if (info.sha1 == null || lastModified != info.lastModified) {
 					info.lastModified = lastModified;
 					System.out.println("Calculating sha1 of " + file);
-					info.sha1 = ChdMan.sha1(file);
+					info.sha1 = mame.sha1(file);
 					notifyCachedDataChanged();
 					if (!info.sha1.equalsIgnoreCase(sha1)) {
 						System.err.println("SHA1 of " + file + " mismatch:");

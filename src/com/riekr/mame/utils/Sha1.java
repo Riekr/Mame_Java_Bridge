@@ -4,7 +4,10 @@ import com.riekr.mame.tools.MameException;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.adapters.HexBinaryAdapter;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
@@ -16,10 +19,10 @@ public class Sha1 {
 	}
 
 	@NotNull
-	public static String calc(@NotNull File file) {
+	public static String calc(@NotNull Path file) {
 		try {
 			MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
-			try (InputStream input = new FileInputStream(file)) {
+			try (InputStream input = Files.newInputStream(file)) {
 				byte[] buffer = new byte[8192];
 				int len;
 				while ((len = input.read(buffer)) != -1)

@@ -17,12 +17,13 @@ import java.util.Set;
 
 public class MameConfig implements Externalizable {
 
-	public @NotNull  Path      exec;
+	public @NotNull  Path      mameExec;
+	public @Nullable Path      chdManExec;
 	public @NotNull  Set<Path> romPath;
 	public @Nullable Path      cacheFile;
 
-	public MameConfig(@NotNull Path exec, @Nullable Set<Path> romPath, String id) {
-		this.exec = exec;
+	public MameConfig(@NotNull Path mameExec, @Nullable Path chdManExec, @Nullable Set<Path> romPath, String id) {
+		this.mameExec = mameExec;
 		if (romPath == null || romPath.isEmpty())
 			this.romPath = Collections.emptySet();
 		else
@@ -32,6 +33,7 @@ public class MameConfig implements Externalizable {
 		else
 			cacheFile = Path.of(System.getProperty("user.home"), ".com.riekr.mame", id + ".cache");
 		check();
+		this.chdManExec = chdManExec;
 	}
 
 	@Override
@@ -39,24 +41,24 @@ public class MameConfig implements Externalizable {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		MameConfig config = (MameConfig) o;
-		return Objects.equals(exec, config.exec) && Objects.equals(romPath, config.romPath);
+		return Objects.equals(mameExec, config.mameExec) && Objects.equals(romPath, config.romPath);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(exec, romPath);
+		return Objects.hash(mameExec, romPath);
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
-		SerUtils.writePath(out, exec);
+		SerUtils.writePath(out, mameExec);
 		SerUtils.writePaths(out, romPath);
 		SerUtils.writePath(out, cacheFile);
 	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
-		exec = Objects.requireNonNull(SerUtils.readPath(in));
+		mameExec = Objects.requireNonNull(SerUtils.readPath(in));
 		romPath = Objects.requireNonNull(SerUtils.readPathSet(in));
 		cacheFile = SerUtils.readPath(in);
 		check();
@@ -64,11 +66,11 @@ public class MameConfig implements Externalizable {
 
 	private void check() {
 		//noinspection ConstantConditions
-		if (exec == null)
+		if (mameExec == null)
 			throw new MameException("Mame not specified.");
-		if (!Files.exists(exec))
-			throw new MameException("Specified mame executable not found: " + exec);
-		if (!Files.isExecutable(exec))
-			throw new MameException("Specified mame is not executable: " + exec);
+		if (!Files.exists(mameExec))
+			throw new MameException("Specified mame executable not found: " + mameExec);
+		if (!Files.isExecutable(mameExec))
+			throw new MameException("Specified mame is not executable: " + mameExec);
 	}
 }

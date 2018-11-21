@@ -7,6 +7,7 @@ import com.riekr.mame.beans.SoftwareLists;
 import com.riekr.mame.config.ConfigFactory;
 import com.riekr.mame.config.MameConfig;
 import com.riekr.mame.utils.JaxbUtils;
+import com.riekr.mame.utils.Sha1;
 import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,7 +39,7 @@ public class Mame implements Serializable {
 
 	@NotNull
 	private static Mame prepare(@NotNull Mame newInstance) {
-		newInstance._execLastModified = newInstance._config.exec.toFile().lastModified();
+		newInstance._execLastModified = newInstance._config.mameExec.toFile().lastModified();
 		newInstance.requestCachesWrite();
 		return newInstance;
 	}
@@ -54,7 +55,7 @@ public class Mame implements Serializable {
 		if (res == null)
 			res = prepare(new Mame(config));
 		else {
-			if (res._execLastModified != res._config.exec.toFile().lastModified()) {
+			if (res._execLastModified != res._config.mameExec.toFile().lastModified()) {
 				Mame newInstance = new Mame(res._config);
 				if (!newInstance.version().equals(res._version))
 					res = prepare(newInstance);
@@ -137,8 +138,8 @@ public class Mame implements Serializable {
 			try {
 				System.out.println("Getting software lists for v" + version());
 				Runtime rt = Runtime.getRuntime();
-				File home = _config.exec.getParent().toFile();
-				Process proc = rt.exec(_config.exec + " -getsoftlist", null, home);
+				File home = _config.mameExec.getParent().toFile();
+				Process proc = rt.exec(_config.mameExec + " -getsoftlist", null, home);
 				System.out.println("Parsing software lists...");
 				try (InputStream is = proc.getInputStream()) {
 					_softwareLists = JaxbUtils.unmarshal(is, SoftwareLists.class);
@@ -160,8 +161,8 @@ public class Mame implements Serializable {
 			try {
 				System.out.println("Getting machines for v" + version());
 				Runtime rt = Runtime.getRuntime();
-				File home = _config.exec.getParent().toFile();
-				Process proc = rt.exec(_config.exec + " -listxml", null, home);
+				File home = _config.mameExec.getParent().toFile();
+				Process proc = rt.exec(_config.mameExec + " -listxml", null, home);
 				System.out.println("Parsing machines...");
 				try (InputStream is = proc.getInputStream()) {
 					_machines = JaxbUtils.unmarshal(is, Machines.class);
@@ -182,10 +183,10 @@ public class Mame implements Serializable {
 		Sync.condInit(this, () -> _version == null, () -> {
 			_version = "<undef>";
 			try {
-				System.out.println("Getting mame version from " + _config.exec);
+				System.out.println("Getting mame version from " + _config.mameExec);
 				Runtime rt = Runtime.getRuntime();
-				File home = _config.exec.getParent().toFile();
-				Process proc = rt.exec(_config.exec + " -help", null, home);
+				File home = _config.mameExec.getParent().toFile();
+				Process proc = rt.exec(_config.mameExec + " -help", null, home);
 				// MAME v0.203 (mame0203)
 				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
 					Matcher m = Pattern.compile("MAME\\s+v([0-9.]+)\\s+.*").matcher("");
@@ -206,6 +207,29 @@ public class Mame implements Serializable {
 		return _version;
 	}
 
+	public String sha1(@NotNull Path file) {
+		if (file.getFileName().toString().toLowerCase().endsWith(".chd")) {
+			if (_config.chdManExec == null)
+				throw new MameException("ChdMan executable not specified.");
+			try {
+				Runtime rt = Runtime.getRuntime();
+				Process proc = rt.exec(_config.chdManExec + " info -i \"" + file + '"');
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
+					String line;
+					while ((line = reader.readLine()) != null) {
+						// System.err.println(line);
+						if (line.startsWith("SHA1:"))
+							return line.substring(5).trim();
+					}
+				}
+				return "";
+			} catch (IOException e) {
+				throw new MameException("Unable to create chd sha1 of " + file, e);
+			}
+		} else
+			return Sha1.calc(file);
+	}
+
 	public void requestCachesWrite() {
 		if (_writeCacheRequested.compareAndSet(false, true)) {
 			if (_config.cacheFile != null)
@@ -215,6 +239,6 @@ public class Mame implements Serializable {
 
 	@Override
 	public String toString() {
-		return _config.exec.getFileName() + " " + _version;
+		return _config.mameExec.getFileName() + " " + _version;
 	}
 }

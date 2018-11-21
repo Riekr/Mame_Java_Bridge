@@ -15,7 +15,10 @@ import java.util.function.Supplier;
 public class ConfigFactory implements Supplier<MameConfig> {
 
 	@CommandLine.Option(names = "--mame", description = "Mame executable")
-	public Path exec;
+	public Path mame;
+
+	@CommandLine.Option(names = "--chdman", description = "ChdMan executable")
+	public Path chdman;
 
 	@CommandLine.Option(names = "--rompath", split = ":;", description = "Paths to search for machines")
 	public Set<Path> romPath;
@@ -33,19 +36,25 @@ public class ConfigFactory implements Supplier<MameConfig> {
 	public String cacheId;
 
 	@NotNull
-	private static Path findMameExecInPath(@Nullable Path name) {
+	private Path findExecInPath(@Nullable Path specifiedName, String... otherNames) {
 		String[] names;
-		if (name == null) {
+		if (specifiedName == null) {
 			String ext = "";
 			if (System.getProperty("os.name").toLowerCase().contains("win"))
 				ext = ".exe";
-			names = new String[]{
-					"mame" + ext,
-					"mame64" + ext
-			};
+			names = new String[otherNames.length];
+			for (int i = 0; i < names.length; i++)
+				names[i] = otherNames[i] + ext;
 		} else
-			names = new String[]{name.getFileName().toString()};
+			names = new String[]{specifiedName.getFileName().toString()};
 		Path exec = CLIUtils.findExecInPath(names);
+		if (exec == null && baseDir != null) {
+			for (String name : names) {
+				exec = baseDir.resolve(name);
+				if (Files.isExecutable(exec))
+					return exec;
+			}
+		}
 		if (exec == null)
 			throw new MameException("Mame executable not found in path");
 		return exec;
@@ -64,10 +73,10 @@ public class ConfigFactory implements Supplier<MameConfig> {
 
 	@Override
 	public MameConfig get() {
-		if (exec == null || exec.getNameCount() == 1)
-			exec = findMameExecInPath(exec);
+		if (mame == null || mame.getNameCount() == 1)
+			mame = findExecInPath(mame, "mame", "mame64");
 		if (baseDir == null)
-			baseDir = exec.getParent();
+			baseDir = mame.getParent();
 		if (ini == null && baseDir != null) {
 			ini = baseDir.resolve("mame.ini");
 			if (!Files.isReadable(ini))
@@ -86,6 +95,9 @@ public class ConfigFactory implements Supplier<MameConfig> {
 			else if (baseDir != null)
 				samplePath = searchPaths(baseDir, "samples");
 		}
-		return new MameConfig(exec, romPath, cacheId);
+		if (chdman == null || chdman.getNameCount() == 1) {
+			chdman = findExecInPath(chdman, "chdman");
+		}
+		return new MameConfig(mame, chdman, romPath, cacheId);
 	}
 }

@@ -6,20 +6,24 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+
+import static java.nio.file.StandardOpenOption.CREATE_NEW;
 
 public class PrintStreamTee extends PrintStream {
 
-	public static PrintStream to(@Nullable File f) {
+	public static PrintStream to(@Nullable Path f) {
 		if (f == null)
 			return System.out;
 		try {
-			PrintStreamTee tee = new PrintStreamTee(new BufferedOutputStream(new FileOutputStream(f, false)));
+			PrintStreamTee tee = new PrintStreamTee(new BufferedOutputStream(Files.newOutputStream(f, CREATE_NEW)));
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 				tee.flush();
 				tee.close();
 			}));
 			return tee;
-		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
 			throw new MameException("Unable to tee std output to " + f, e);
 		}
 	}

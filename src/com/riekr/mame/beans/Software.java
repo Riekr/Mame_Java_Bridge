@@ -8,12 +8,15 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 public class Software extends MameXmlChildOf<SoftwareList> implements Serializable {
@@ -39,8 +42,8 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 	@XmlElement(name = "part")
 	private List<SoftwarePart> _parts;
 
-	private volatile Software _parent;
-	private transient volatile Set<File> _roots;
+	private volatile           Software  _parent;
+	private transient volatile Set<Path> _roots;
 
 	@Override
 	public void setParentNode(@NotNull SoftwareList parentNode) {
@@ -56,17 +59,17 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 	}
 
 	@NotNull
-	public Set<File> getRoots() {
+	public Set<Path> getRoots() {
 		return getRoots(false);
 	}
 
 	@NotNull
-	public Set<File> getRoots(boolean invalidateCache) {
+	public Set<Path> getRoots(boolean invalidateCache) {
 		Sync.condInit(this, () -> _roots == null || invalidateCache, () -> {
 			_roots = new HashSet<>();
-			for (File slRoot : getParentNode().getRoots(invalidateCache)) {
-				File candidate = new File(slRoot, name);
-				if (candidate.isDirectory())
+			for (Path slRoot : getParentNode().getRoots(invalidateCache)) {
+				Path candidate = slRoot.resolve(name);
+				if (Files.isDirectory(candidate))
 					_roots.add(candidate);
 			}
 		});
@@ -125,36 +128,36 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 		synchronized (this) {
 			//noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (parent) {
-				Set<File> roots = getRoots(invalidateCache);
-				if (roots.size() > 1)
-					throw new MameException("Multiple roots detected for (" + this + ") in " + roots);
-				File root = roots.iterator().next();
-				File parentDir = new File(root.getParent(), cloneof);
-				if (!parentDir.isDirectory() && !parentDir.mkdir()) {
-					System.err.println("Unable to create " + parentDir);
+				try {
+					Set<Path> roots = getRoots(invalidateCache);
+					if (roots.size() > 1)
+						throw new MameException("Multiple roots detected for (" + this + ") in " + roots);
+					Path root = roots.iterator().next();
+					Path parentDir = root.getParent().resolve(cloneof);
+					Files.createDirectories(parentDir);
+					Stream<Path> cloneFiles = Files.list(root);
+					AtomicInteger errors = new AtomicInteger();
+					AtomicInteger successes = new AtomicInteger();
+					cloneFiles.forEach(srcFile -> {
+						try {
+							Path destFile = parentDir.resolve(srcFile.getFileName());
+							Files.deleteIfExists(destFile);
+							Files.move(srcFile, destFile);
+							successes.getAndIncrement();
+						} catch (IOException e) {
+							errors.getAndIncrement();
+							System.err.println("IO error merging '" + name + '\'');
+							e.printStackTrace(System.err);
+						}
+					});
+					if (errors.get() == 0 && Files.list(root).findAny().isEmpty())
+						System.err.println("Unable to delete " + root);
+					return successes.get() > 0;
+				} catch (IOException e) {
+					System.err.println("IO error preparing merging '" + name + '\'');
+					e.printStackTrace(System.err);
 					return false;
 				}
-				File[] cloneFiles = root.listFiles();
-				if (cloneFiles == null || cloneFiles.length == 0) {
-					System.err.println("No files in " + root);
-					return false;
-				}
-				int errors = 0, successes = 0;
-				for (File srcFile : cloneFiles) {
-					File destFile = new File(parentDir, srcFile.getName());
-					if (destFile.exists() && !srcFile.delete()) {
-						System.err.println("Unable to delete " + srcFile);
-						errors++;
-					}
-					if (!srcFile.renameTo(destFile)) {
-						System.err.println("Unable to move " + srcFile + " to " + parentDir);
-						errors++;
-					} else
-						successes++;
-				}
-				if (errors == 0 && !root.delete())
-					System.err.println("Unable to delete " + root);
-				return successes > 0;
 			}
 		}
 	}

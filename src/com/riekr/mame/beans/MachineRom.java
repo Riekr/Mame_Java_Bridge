@@ -5,13 +5,14 @@ import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
-import java.io.File;
 import java.io.Serializable;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class MachineRom extends MachineComponent implements Serializable {
 
@@ -45,38 +46,35 @@ public class MachineRom extends MachineComponent implements Serializable {
 	@XmlAttribute
 	public enYesNo optional = enYesNo.no;
 
-	private transient volatile Set<File> _availableContainers;
+	private transient volatile Set<Path> _availableContainers;
 
 	@NotNull
-	public Stream<File> availableContainers() {
+	public Stream<Path> availableContainers() {
 		return availableContainers(false);
 	}
 
 	@NotNull
-	public Stream<File> availableContainers(boolean invalidateCache) {
+	public Stream<Path> availableContainers(boolean invalidateCache) {
 		Sync.condInit(this, () -> _availableContainers == null || invalidateCache, () -> {
 			Machine machine = getParentNode();
 			Mame mame = machine.getParentNode().getParentNode();
 			_availableContainers = new HashSet<>();
 			do {
-				for (File romPath : mame.getRomPath()) {
-					File machineZipFile = new File(romPath, machine.name + ".zip");
-					if (machineZipFile.canRead()) {
-						try (ZipFile machineZip = new ZipFile(machineZipFile)) {
-							ZipEntry romZipEntry = machineZip.getEntry(name);
-							if (romZipEntry != null) {
+				for (Path romPath : mame.getRomPath()) {
+					Path machineZipFile = romPath.resolve(machine.name + ".zip");
+					if (Files.exists(machineZipFile)) {
+						try (FileSystem machineZip = FileSystems.newFileSystem(machineZipFile, null)) {
+							if (Files.exists(machineZip.getPath(name)))
 								_availableContainers.add(machineZipFile);
-								continue;
-							}
 						} catch (Exception e) {
 							System.err.println("Unable to open " + machineZipFile);
 							e.printStackTrace(System.err);
 						}
 					}
-					File machineDir = new File(romPath, machine.name);
-					if (machineDir.isDirectory()) {
-						File rom = new File(machineDir, name);
-						if (rom.isFile())
+					Path machineDir = romPath.resolve(machine.name);
+					if (Files.isDirectory(machineDir)) {
+						Path rom = machineDir.resolve(name);
+						if (Files.exists(rom))
 							_availableContainers.add(machineDir);
 					}
 				}

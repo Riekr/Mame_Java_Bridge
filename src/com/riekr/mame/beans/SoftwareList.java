@@ -7,8 +7,9 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -25,7 +26,7 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 	@XmlElement(name = "software")
 	private List<Software> _softwares;
 
-	private transient volatile Set<File> _roots;
+	private transient volatile Set<Path> _roots;
 
 	@Override
 	public void setParentNode(@NotNull SoftwareLists parentNode) {
@@ -37,17 +38,17 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 	}
 
 	@NotNull
-	public Set<File> getRoots() {
+	public Set<Path> getRoots() {
 		return getRoots(false);
 	}
 
 	@NotNull
-	public Set<File> getRoots(boolean invalidateCache) {
+	public Set<Path> getRoots(boolean invalidateCache) {
 		Sync.condInit(this, () -> _roots == null || invalidateCache, () -> {
 			_roots = new HashSet<>();
-			for (File romPath : Mame.getInstance().getRomPath()) {
-				File candidate = new File(romPath, name);
-				if (candidate.isDirectory())
+			for (Path romPath : Mame.getInstance().getRomPath()) {
+				Path candidate = romPath.resolve(name);
+				if (Files.isDirectory(candidate))
 					_roots.add(candidate);
 			}
 		});

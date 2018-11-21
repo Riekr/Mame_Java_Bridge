@@ -9,8 +9,8 @@ import com.riekr.mame.utils.PrintStreamTee;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
-import java.io.File;
 import java.io.PrintStream;
+import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -22,7 +22,7 @@ public class M_Missing implements Runnable {
 	public Set<String> names;
 
 	@CommandLine.Option(names = "--output", description = "Write output to file <out> in addition to stdout")
-	public File out;
+	public Path out;
 
 	@CommandLine.Mixin
 	public @NotNull MachinesOptions machinesOptions = new MachinesOptions();

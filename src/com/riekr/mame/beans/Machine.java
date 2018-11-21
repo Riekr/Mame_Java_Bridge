@@ -8,8 +8,8 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
-import java.io.File;
 import java.io.Serializable;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -70,11 +70,11 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	@XmlElement(name = "softwarelist")
 	public List<MachineSoftwareList> softwareLists;
 
-	private volatile Machine _parentMachine;
-	private volatile Set<Machine> _directClones;
-	private volatile Map<String, Set<MachineRom>> _splitRomSet;
-	private volatile Map<String, Set<MachineRom>> _mergedRomSet;
-	private transient volatile Map<File, Set<MachineComponent>> _containers;
+	private volatile           Machine                          _parentMachine;
+	private volatile           Set<Machine>                     _directClones;
+	private volatile           Map<String, Set<MachineRom>>     _splitRomSet;
+	private volatile           Map<String, Set<MachineRom>>     _mergedRomSet;
+	private transient volatile Map<Path, Set<MachineComponent>> _containers;
 
 	public boolean isBios() {
 		return _isbios.val;
@@ -145,12 +145,12 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	}
 
 	@NotNull
-	public Map<File, Set<MachineComponent>> getAvailableContainers() {
+	public Map<Path, Set<MachineComponent>> getAvailableContainers() {
 		return getAvailableContainers(false);
 	}
 
 	@NotNull
-	public Map<File, Set<MachineComponent>> getAvailableContainers(boolean invalidateCache) {
+	public Map<Path, Set<MachineComponent>> getAvailableContainers(boolean invalidateCache) {
 		Sync.condInit(this, () -> _containers == null || invalidateCache, () -> {
 			_containers = new HashMap<>();
 			roms().forEach(rom -> rom.availableContainers(invalidateCache)

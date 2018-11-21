@@ -8,7 +8,7 @@ import com.riekr.mame.utils.CLIUtils;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
-import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -31,8 +31,8 @@ public class M_Containers implements Runnable {
 		s = machinesOptions.filter(s);
 		s.forEach(m -> {
 			System.out.println(m);
-			Map<File, Set<MachineComponent>> containers = m.getAvailableContainers();
-			for (Map.Entry<File, Set<MachineComponent>> e : containers.entrySet()) {
+			Map<Path, Set<MachineComponent>> containers = m.getAvailableContainers();
+			for (Map.Entry<Path, Set<MachineComponent>> e : containers.entrySet()) {
 				System.out.println("\t" + e.getKey() + "\t" + e.getValue().stream().collect(Collectors.groupingBy(MachineComponent::type)).keySet());
 			}
 		});

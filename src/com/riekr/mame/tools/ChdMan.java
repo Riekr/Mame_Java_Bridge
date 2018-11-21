@@ -2,17 +2,21 @@ package com.riekr.mame.tools;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.file.Path;
 
 public class ChdMan {
 
-	private static final File _exec;
+	private static final Path _exec;
 
 	static {
-		_exec = new File(System.getProperty("chdman.exe", "D:\\Giochi\\Mame\\chdman.exe"));
+		// TODO make configurable
+		_exec = Path.of(System.getProperty("chdman.exe", "D:\\Giochi\\Mame\\chdman.exe"));
 	}
 
-	public static String sha1(@NotNull File file) {
+	public static String sha1(@NotNull Path file) {
 		try {
 			Runtime rt = Runtime.getRuntime();
 			Process proc = rt.exec(_exec + " info -i \"" + file + '"');

@@ -7,10 +7,7 @@ import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectOutput;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public final class SerUtils {
 
@@ -41,19 +38,35 @@ public final class SerUtils {
 			writePath(out, p);
 	}
 
+	public static void writePaths(@NotNull ObjectOutput out, @Nullable Map<Path, ?> pathMap) throws IOException {
+		if (pathMap == null) {
+			out.writeInt(-1);
+			return;
+		}
+		out.writeInt(pathMap.size());
+		for (Map.Entry<Path, ?> e : pathMap.entrySet()) {
+			writePath(out, e.getKey());
+			out.writeObject(e.getValue());
+		}
+	}
+
 	public static Set<Path> readPathSet(@NotNull ObjectInput in) throws IOException, ClassNotFoundException {
 		final int sz = in.readInt();
-		switch (sz) {
-			case -1:
-				return null;
-			case 0:
-				return Collections.emptySet();
-			case 1:
-				return Collections.singleton(readPath(in));
-		}
-		HashSet<Path> res = new HashSet<>();
+		if (sz < 0)
+			return null;
+		HashSet<Path> res = new HashSet<>(sz);
 		for (int i = 0; i < sz; i++)
 			res.add(readPath(in));
-		return Collections.unmodifiableSet(res);
+		return res;
+	}
+
+	public static <T> Map<Path, T> readPathMap(@NotNull ObjectInput in) throws IOException, ClassNotFoundException {
+		final int sz = in.readInt();
+		if (sz < 0)
+			return null;
+		HashMap<Path, T> res = new HashMap<>(sz);
+		for (int i = 0; i < sz; i++)
+			res.put(readPath(in), (T) in.readObject());
+		return res;
 	}
 }

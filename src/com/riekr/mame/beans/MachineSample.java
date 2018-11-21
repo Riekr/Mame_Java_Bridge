@@ -19,7 +19,7 @@ public class MachineSample extends MachineComponent implements Serializable {
 	}
 
 	@Override
-	protected @NotNull Set<Path> getAvailableContainersImpl() {
+	protected @NotNull Set<Path> getAvailableContainersImpl(boolean invalidateCache) {
 		// TODO to be implemented
 		return Collections.emptySet();
 	}

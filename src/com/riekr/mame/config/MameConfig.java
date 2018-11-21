@@ -62,7 +62,7 @@ public class MameConfig implements Externalizable {
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		mameExec = Objects.requireNonNull(SerUtils.readPath(in));
-		romPath = Objects.requireNonNull(SerUtils.readPathSet(in));
+		romPath = Collections.unmodifiableSet(Objects.requireNonNull(SerUtils.readPathSet(in)));
 		cacheFile = SerUtils.readPath(in);
 		check();
 	}

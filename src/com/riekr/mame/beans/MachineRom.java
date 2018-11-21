@@ -45,7 +45,7 @@ public class MachineRom extends MachineComponent implements Serializable {
 	public enYesNo optional = enYesNo.no;
 
 	@Override
-	protected @NotNull Set<Path> getAvailableContainersImpl() {
+	protected @NotNull Set<Path> getAvailableContainersImpl(boolean invalidateCache) {
 		Machine machine = getParentNode();
 		Mame mame = getMame();
 		Set<Path> res = new HashSet<>();

@@ -64,19 +64,20 @@ public class MachineRom extends MachineComponent implements Serializable {
 					if (machineZipFile.canRead()) {
 						try (ZipFile machineZip = new ZipFile(machineZipFile)) {
 							ZipEntry romZipEntry = machineZip.getEntry(name);
-							if (romZipEntry != null)
+							if (romZipEntry != null) {
 								_availableContainers.add(machineZipFile);
+								continue;
+							}
 						} catch (Exception e) {
 							System.err.println("Unable to open " + machineZipFile);
 							e.printStackTrace(System.err);
 						}
-					} else {
-						File machineDir = new File(romPath, machine.name);
-						if (machineDir.isDirectory()) {
-							File rom = new File(machineDir, name);
-							if (rom.isFile())
-								_availableContainers.add(machineDir);
-						}
+					}
+					File machineDir = new File(romPath, machine.name);
+					if (machineDir.isDirectory()) {
+						File rom = new File(machineDir, name);
+						if (rom.isFile())
+							_availableContainers.add(machineDir);
 					}
 				}
 				machine = machine.getParentMachine();

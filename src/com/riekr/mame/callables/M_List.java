@@ -7,6 +7,7 @@ import com.riekr.mame.utils.CLIUtils;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 @CommandLine.Command(name = "list", description = "Lists all mame machines")
@@ -19,7 +20,12 @@ public class M_List implements Runnable {
 	public void run() {
 		Stream<Machine> s = Mame.getInstance().machines();
 		s = machinesOptions.filter(s);
-		s.forEach(System.out::println);
+		AtomicInteger count = new AtomicInteger();
+		s.forEach(m -> {
+			System.out.println(m);
+			count.getAndIncrement();
+		});
+		System.out.println("Listed " + count + " machines.");
 	}
 
 	public static void main(String... args) {

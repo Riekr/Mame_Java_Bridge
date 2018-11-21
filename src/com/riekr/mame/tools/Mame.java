@@ -24,7 +24,7 @@ import java.util.zip.GZIPOutputStream;
 public class Mame implements Serializable {
 
 	public static final ConfigFactory DEFAULT_CONFIG_FACTORY = new ConfigFactory();
-	private static      Mame          _DEFAULT_INSTANCE;
+	private static Mame _DEFAULT_INSTANCE;
 
 	public static Mame getInstance() {
 		Sync.condInit(Mame.class, () -> _DEFAULT_INSTANCE == null,
@@ -72,6 +72,7 @@ public class Mame implements Serializable {
 				mame = (Mame) ois.readObject();
 			}
 			if (mame != null) {
+				mame._writeCacheRequested = new AtomicBoolean(false);
 				System.out.println("Restored cache for version " + mame._version);
 				return mame;
 			}
@@ -115,12 +116,12 @@ public class Mame implements Serializable {
 		_config = config;
 	}
 
-	private                 MameConfig    _config;
-	private volatile        SoftwareLists _softwareLists;
-	private volatile        Machines      _machines;
-	private volatile        String        _version;
-	private                 long          _execLastModified;
-	private transient final AtomicBoolean _writeCacheRequested = new AtomicBoolean(false);
+	private MameConfig _config;
+	private volatile SoftwareLists _softwareLists;
+	private volatile Machines _machines;
+	private volatile String _version;
+	private long _execLastModified;
+	private transient AtomicBoolean _writeCacheRequested = new AtomicBoolean(false);
 
 	@NotNull
 	public Set<File> getRomPath() {

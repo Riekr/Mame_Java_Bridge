@@ -24,12 +24,12 @@ import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import static java.nio.file.StandardOpenOption.CREATE;
 
 public class Mame implements Serializable {
 
 	public static final ConfigFactory DEFAULT_CONFIG_FACTORY = new ConfigFactory();
-	private static      Mame          _DEFAULT_INSTANCE;
+	private static Mame _DEFAULT_INSTANCE;
 
 	public static Mame getInstance() {
 		Sync.condInit(Mame.class, () -> _DEFAULT_INSTANCE == null,
@@ -98,7 +98,7 @@ public class Mame implements Serializable {
 				System.out.println("Writing caches to " + _config.cacheFile);
 				try {
 					Files.createDirectories(_config.cacheFile.getParent());
-					try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(Files.newOutputStream(_config.cacheFile, CREATE_NEW)))) {
+					try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(Files.newOutputStream(_config.cacheFile, CREATE)))) {
 						oos.writeObject(this);
 					}
 				} catch (Exception e) {
@@ -120,11 +120,11 @@ public class Mame implements Serializable {
 		_config = config;
 	}
 
-	private           MameConfig    _config;
-	private volatile  SoftwareLists _softwareLists;
-	private volatile  Machines      _machines;
-	private volatile  String        _version;
-	private           long          _execLastModified;
+	private MameConfig _config;
+	private volatile SoftwareLists _softwareLists;
+	private volatile Machines _machines;
+	private volatile String _version;
+	private long _execLastModified;
 	private transient AtomicBoolean _writeCacheRequested = new AtomicBoolean(false);
 
 	@NotNull
@@ -137,9 +137,10 @@ public class Mame implements Serializable {
 		Sync.condInit(this, () -> _softwareLists == null, () -> {
 			try {
 				System.out.println("Getting software lists for v" + version());
-				Runtime rt = Runtime.getRuntime();
 				File home = _config.mameExec.getParent().toFile();
-				Process proc = rt.exec(_config.mameExec + " -getsoftlist", null, home);
+				Process proc = new ProcessBuilder(_config.mameExec.toString(), "-getsoftlist")
+						.directory(home)
+						.start();
 				System.out.println("Parsing software lists...");
 				try (InputStream is = proc.getInputStream()) {
 					_softwareLists = JaxbUtils.unmarshal(is, SoftwareLists.class);
@@ -160,9 +161,10 @@ public class Mame implements Serializable {
 		Sync.condInit(this, () -> _machines == null, () -> {
 			try {
 				System.out.println("Getting machines for v" + version());
-				Runtime rt = Runtime.getRuntime();
 				File home = _config.mameExec.getParent().toFile();
-				Process proc = rt.exec(_config.mameExec + " -listxml", null, home);
+				Process proc = new ProcessBuilder(_config.mameExec.toString(), "-listxml")
+						.directory(home)
+						.start();
 				System.out.println("Parsing machines...");
 				try (InputStream is = proc.getInputStream()) {
 					_machines = JaxbUtils.unmarshal(is, Machines.class);
@@ -184,9 +186,10 @@ public class Mame implements Serializable {
 			_version = "<undef>";
 			try {
 				System.out.println("Getting mame version from " + _config.mameExec);
-				Runtime rt = Runtime.getRuntime();
 				File home = _config.mameExec.getParent().toFile();
-				Process proc = rt.exec(_config.mameExec + " -help", null, home);
+				Process proc = new ProcessBuilder(_config.mameExec.toString(), "-help")
+						.directory(home)
+						.start();
 				// MAME v0.203 (mame0203)
 				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
 					Matcher m = Pattern.compile("MAME\\s+v([0-9.]+)\\s+.*").matcher("");

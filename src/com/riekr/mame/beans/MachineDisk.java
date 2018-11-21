@@ -40,7 +40,7 @@ public class MachineDisk extends MachineComponent implements Serializable {
 	}
 
 	@Override
-	public @NotNull Set<Path> availableContainers(boolean invalidateCache) {
+	protected @NotNull Set<Path> getAvailableContainersImpl() {
 		// TODO to be implemented
 		return Collections.emptySet();
 	}

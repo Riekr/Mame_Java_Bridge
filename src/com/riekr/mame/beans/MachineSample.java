@@ -18,8 +18,8 @@ public class MachineSample extends MachineComponent implements Serializable {
 		return enMachineComponentType.SAMPLE;
 	}
 
-	@NotNull
-	public Set<Path> availableContainers(boolean invalidateCache) {
+	@Override
+	protected @NotNull Set<Path> getAvailableContainersImpl() {
 		// TODO to be implemented
 		return Collections.emptySet();
 	}

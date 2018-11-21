@@ -1,6 +1,9 @@
 package com.riekr.mame.callables;
 
-import com.riekr.mame.beans.*;
+import com.riekr.mame.beans.ContainersCapable;
+import com.riekr.mame.beans.Machine;
+import com.riekr.mame.beans.MachineComponent;
+import com.riekr.mame.beans.enMachineComponentType;
 import com.riekr.mame.mixins.MachinesOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
@@ -33,13 +36,13 @@ public class M_Containers implements Runnable {
 		s = machinesOptions.filter(s);
 		s.forEach(m -> {
 			System.out.println(m);
-			Stream<Containers<? extends MachineComponent>> c;
+			Stream<? extends MachineComponent> c;
 			if (componentType == null)
-				c = m.componentFiles();
+				c = m.components();
 			else
-				c = componentType.containersFrom(m);
-			c.flatMap(Containers::unfold)
-					.collect(groupingBy(Container::path))
+				c = componentType.streamFrom(m);
+			c.flatMap(ContainersCapable::unfold)
+					.collect(groupingBy(cont -> cont.path))
 					.forEach((path, containers)
 							-> System.out.println("\t" + path + "\t" + containers.stream().collect(groupingBy(container -> container.comp.type())).keySet()));
 		});

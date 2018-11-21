@@ -1,7 +1,7 @@
 package com.riekr.mame.callables;
 
-import com.riekr.mame.beans.Containers;
 import com.riekr.mame.beans.Machine;
+import com.riekr.mame.beans.MachineComponent;
 import com.riekr.mame.beans.enMachineComponentType;
 import com.riekr.mame.mixins.MachinesOptions;
 import com.riekr.mame.mixins.ParallelOptions;
@@ -42,7 +42,8 @@ public class M_Missing implements Runnable {
 			machines = machines.filter(m -> names.contains(m.name));
 		machines = machinesOptions.filter(machines);
 		machines = parallelOptions.parallelize(machines);
-		machines = machines.filter(machine -> componentType.containersFrom(machine).anyMatch(Containers::isEmpty));
+		machines = machines.filter(machine
+				-> componentType.streamFrom(machine).anyMatch(MachineComponent::haNoAvailableContainers));
 		AtomicInteger count = new AtomicInteger();
 		PrintStream ps = PrintStreamTee.to(out);
 		machines.forEach(m -> {

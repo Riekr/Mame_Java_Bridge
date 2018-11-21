@@ -52,23 +52,19 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	public String manufacturer;
 
 	@XmlElement(name = "rom")
-	private           List<MachineRom>             _roms;
-	private transient List<Containers<MachineRom>> _romFiles;
+	private List<MachineRom> _roms;
 
 	@XmlElement(name = "device_ref")
 	public List<MachineDeviceRef> deviceRefs;
 
 	@XmlElement(name = "sample")
-	private           List<MachineSample>             _samples;
-	private transient List<Containers<MachineSample>> _sampleFiles;
+	private List<MachineSample> _samples;
 
 	@XmlElement(name = "biosset")
 	public List<MachineBiosSet> biosSets;
 
 	@XmlElement(name = "disk")
-	private           List<MachineDisk>             _disks;
-	private transient List<Containers<MachineDisk>> _diskFiles;
-
+	private List<MachineDisk> _disks;
 
 	@XmlElement(name = "softwarelist")
 	public List<MachineSoftwareList> softwareLists;
@@ -96,38 +92,8 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	}
 
 	@NotNull
-	public Stream<Containers<MachineRom>> romFiles() {
-		return romFiles(false);
-	}
-
-	@NotNull
-	public Stream<Containers<MachineRom>> romFiles(boolean invalidateCache) {
-		Sync.condInit(this, () -> _romFiles == null || invalidateCache, () -> {
-			_romFiles = new ArrayList<>();
-			roms().forEach(machineRom ->
-					_romFiles.add(new Containers<>(machineRom, machineRom.availableContainers(invalidateCache))));
-		});
-		return _romFiles.stream();
-	}
-
-	@NotNull
 	public Stream<MachineSample> samples() {
 		return _samples == null ? Stream.empty() : _samples.stream();
-	}
-
-	@NotNull
-	public Stream<Containers<MachineSample>> sampleFiles() {
-		return sampleFiles(false);
-	}
-
-	@NotNull
-	public Stream<Containers<MachineSample>> sampleFiles(boolean invalidateCache) {
-		Sync.condInit(this, () -> _sampleFiles == null || invalidateCache, () -> {
-			_sampleFiles = new ArrayList<>();
-			samples().forEach(machineSample ->
-					_sampleFiles.add(new Containers<>(machineSample, machineSample.availableContainers(invalidateCache))));
-		});
-		return _sampleFiles.stream();
 	}
 
 	@NotNull
@@ -136,28 +102,8 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	}
 
 	@NotNull
-	public Stream<Containers<MachineDisk>> diskFiles() {
-		return diskFiles(false);
-	}
-
-	@NotNull
-	public Stream<Containers<MachineDisk>> diskFiles(boolean invalidateCache) {
-		Sync.condInit(this, () -> _diskFiles == null || invalidateCache, () -> {
-			_diskFiles = new ArrayList<>();
-			disks().forEach(machineDisk ->
-					_diskFiles.add(new Containers<>(machineDisk, machineDisk.availableContainers(invalidateCache))));
-		});
-		return _diskFiles.stream();
-	}
-
-	@NotNull
-	public Stream<Containers<? extends MachineComponent>> componentFiles() {
-		return componentFiles(false);
-	}
-
-	@NotNull
-	public Stream<Containers<? extends MachineComponent>> componentFiles(boolean invalidateCache) {
-		return Stream.concat(Stream.concat(romFiles(invalidateCache), sampleFiles(invalidateCache)), diskFiles(invalidateCache));
+	public Stream<MachineComponent> components() {
+		return Stream.concat(Stream.concat(roms(), samples()), disks());
 	}
 
 	@NotNull

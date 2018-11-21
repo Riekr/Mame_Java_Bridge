@@ -17,10 +17,13 @@ import java.util.Set;
 
 public class MameConfig implements Externalizable {
 
-	public @NotNull  Path      mameExec;
-	public @Nullable Path      chdManExec;
-	public @NotNull  Set<Path> romPath;
-	public @Nullable Path      cacheFile;
+	public @NotNull Path mameExec;
+	public @Nullable Path chdManExec;
+	public @NotNull Set<Path> romPath;
+	public @Nullable Path cacheFile;
+
+	public MameConfig() {
+	}
 
 	public MameConfig(@NotNull Path mameExec, @Nullable Path chdManExec, @Nullable Set<Path> romPath, String id) {
 		this.mameExec = mameExec;

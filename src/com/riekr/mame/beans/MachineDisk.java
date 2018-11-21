@@ -1,7 +1,12 @@
 package com.riekr.mame.beans;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Set;
 
 public class MachineDisk extends MachineComponent implements Serializable {
 
@@ -32,5 +37,11 @@ public class MachineDisk extends MachineComponent implements Serializable {
 	@Override
 	public enMachineComponentType type() {
 		return enMachineComponentType.DISK;
+	}
+
+	@Override
+	public @NotNull Set<Path> availableContainers(boolean invalidateCache) {
+		// TODO to be implemented
+		return Collections.emptySet();
 	}
 }

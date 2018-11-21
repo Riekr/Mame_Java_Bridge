@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Stream;
 
 public class MachineRom extends MachineComponent implements Serializable {
 
@@ -49,12 +48,7 @@ public class MachineRom extends MachineComponent implements Serializable {
 	private transient volatile Set<Path> _availableContainers;
 
 	@NotNull
-	public Stream<Path> availableContainers() {
-		return availableContainers(false);
-	}
-
-	@NotNull
-	public Stream<Path> availableContainers(boolean invalidateCache) {
+	public Set<Path> availableContainers(boolean invalidateCache) {
 		Sync.condInit(this, () -> _availableContainers == null || invalidateCache, () -> {
 			Machine machine = getParentNode();
 			Mame mame = machine.getParentNode().getParentNode();
@@ -81,7 +75,7 @@ public class MachineRom extends MachineComponent implements Serializable {
 				machine = machine.getParentMachine();
 			} while (machine != null);
 		});
-		return _availableContainers.stream();
+		return _availableContainers;
 	}
 
 	@Override

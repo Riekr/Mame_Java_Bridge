@@ -1,7 +1,12 @@
 package com.riekr.mame.beans;
 
+import org.jetbrains.annotations.NotNull;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Set;
 
 public class MachineSample extends MachineComponent implements Serializable {
 
@@ -11,5 +16,11 @@ public class MachineSample extends MachineComponent implements Serializable {
 	@Override
 	public enMachineComponentType type() {
 		return enMachineComponentType.SAMPLE;
+	}
+
+	@NotNull
+	public Set<Path> availableContainers(boolean invalidateCache) {
+		// TODO to be implemented
+		return Collections.emptySet();
 	}
 }

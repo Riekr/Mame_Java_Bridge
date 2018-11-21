@@ -9,7 +9,6 @@ import org.jetbrains.annotations.Nullable;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -53,28 +52,31 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	public String manufacturer;
 
 	@XmlElement(name = "rom")
-	private List<MachineRom> _roms;
+	private           List<MachineRom>             _roms;
+	private transient List<Containers<MachineRom>> _romFiles;
 
 	@XmlElement(name = "device_ref")
 	public List<MachineDeviceRef> deviceRefs;
 
 	@XmlElement(name = "sample")
-	public List<MachineSample> samples;
+	private           List<MachineSample>             _samples;
+	private transient List<Containers<MachineSample>> _sampleFiles;
 
 	@XmlElement(name = "biosset")
 	public List<MachineBiosSet> biosSets;
 
 	@XmlElement(name = "disk")
-	public List<MachineDisk> disks;
+	private           List<MachineDisk>             _disks;
+	private transient List<Containers<MachineDisk>> _diskFiles;
+
 
 	@XmlElement(name = "softwarelist")
 	public List<MachineSoftwareList> softwareLists;
 
-	private volatile           Machine                          _parentMachine;
-	private volatile           Set<Machine>                     _directClones;
-	private volatile           Map<String, Set<MachineRom>>     _splitRomSet;
-	private volatile           Map<String, Set<MachineRom>>     _mergedRomSet;
-	private transient volatile Map<Path, Set<MachineComponent>> _containers;
+	private volatile Machine                      _parentMachine;
+	private volatile Set<Machine>                 _directClones;
+	private volatile Map<String, Set<MachineRom>> _splitRomSet;
+	private volatile Map<String, Set<MachineRom>> _mergedRomSet;
 
 	public boolean isBios() {
 		return _isbios.val;
@@ -91,6 +93,71 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	@NotNull
 	public Stream<MachineRom> roms() {
 		return _roms == null ? Stream.empty() : _roms.stream();
+	}
+
+	@NotNull
+	public Stream<Containers<MachineRom>> romFiles() {
+		return romFiles(false);
+	}
+
+	@NotNull
+	public Stream<Containers<MachineRom>> romFiles(boolean invalidateCache) {
+		Sync.condInit(this, () -> _romFiles == null || invalidateCache, () -> {
+			_romFiles = new ArrayList<>();
+			roms().forEach(machineRom ->
+					_romFiles.add(new Containers<>(machineRom, machineRom.availableContainers(invalidateCache))));
+		});
+		return _romFiles.stream();
+	}
+
+	@NotNull
+	public Stream<MachineSample> samples() {
+		return _samples == null ? Stream.empty() : _samples.stream();
+	}
+
+	@NotNull
+	public Stream<Containers<MachineSample>> sampleFiles() {
+		return sampleFiles(false);
+	}
+
+	@NotNull
+	public Stream<Containers<MachineSample>> sampleFiles(boolean invalidateCache) {
+		Sync.condInit(this, () -> _sampleFiles == null || invalidateCache, () -> {
+			_sampleFiles = new ArrayList<>();
+			samples().forEach(machineSample ->
+					_sampleFiles.add(new Containers<>(machineSample, machineSample.availableContainers(invalidateCache))));
+		});
+		return _sampleFiles.stream();
+	}
+
+	@NotNull
+	public Stream<MachineDisk> disks() {
+		return _disks == null ? Stream.empty() : _disks.stream();
+	}
+
+	@NotNull
+	public Stream<Containers<MachineDisk>> diskFiles() {
+		return diskFiles(false);
+	}
+
+	@NotNull
+	public Stream<Containers<MachineDisk>> diskFiles(boolean invalidateCache) {
+		Sync.condInit(this, () -> _diskFiles == null || invalidateCache, () -> {
+			_diskFiles = new ArrayList<>();
+			disks().forEach(machineDisk ->
+					_diskFiles.add(new Containers<>(machineDisk, machineDisk.availableContainers(invalidateCache))));
+		});
+		return _diskFiles.stream();
+	}
+
+	@NotNull
+	public Stream<Containers<? extends MachineComponent>> componentFiles() {
+		return componentFiles(false);
+	}
+
+	@NotNull
+	public Stream<Containers<? extends MachineComponent>> componentFiles(boolean invalidateCache) {
+		return Stream.concat(Stream.concat(romFiles(invalidateCache), sampleFiles(invalidateCache)), diskFiles(invalidateCache));
 	}
 
 	@NotNull
@@ -145,22 +212,6 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 	}
 
 	@NotNull
-	public Map<Path, Set<MachineComponent>> getAvailableContainers() {
-		return getAvailableContainers(false);
-	}
-
-	@NotNull
-	public Map<Path, Set<MachineComponent>> getAvailableContainers(boolean invalidateCache) {
-		Sync.condInit(this, () -> _containers == null || invalidateCache, () -> {
-			_containers = new HashMap<>();
-			roms().forEach(rom -> rom.availableContainers(invalidateCache)
-					.forEach(file -> _containers.computeIfAbsent(file, k -> new HashSet<>()).add(rom)));
-			// TODO disks, samples, bios, etc
-		});
-		return _containers;
-	}
-
-	@NotNull
 	public Map<String, Set<MachineRom>> getSplitRomSet() {
 		Sync.condInit(this, () -> _splitRomSet == null, () -> {
 			_splitRomSet = new LinkedHashMap<>();
@@ -209,16 +260,16 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 			for (MachineRom r : _roms)
 				r.setParentNode(this);
 		}
-		if (samples != null) {
-			for (MachineSample s : samples)
+		if (_samples != null) {
+			for (MachineSample s : _samples)
 				s.setParentNode(this);
 		}
 		if (biosSets != null) {
 			for (MachineBiosSet b : biosSets)
 				b.setParentNode(this);
 		}
-		if (disks != null) {
-			for (MachineDisk d : disks)
+		if (_disks != null) {
+			for (MachineDisk d : _disks)
 				d.setParentNode(this);
 		}
 	}

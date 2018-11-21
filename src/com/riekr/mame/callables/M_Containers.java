@@ -1,18 +1,17 @@
 package com.riekr.mame.callables;
 
-import com.riekr.mame.beans.Machine;
-import com.riekr.mame.beans.MachineComponent;
+import com.riekr.mame.beans.*;
 import com.riekr.mame.mixins.MachinesOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
 
-import java.nio.file.Path;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @CommandLine.Command(name = "containers", description = "Lists all found containers for this machine")
 public class M_Containers implements Runnable {
@@ -23,6 +22,9 @@ public class M_Containers implements Runnable {
 	@CommandLine.Mixin
 	public @NotNull MachinesOptions machinesOptions = new MachinesOptions();
 
+	@CommandLine.Option(names = "--component-type", description = "Limit missing file search to component type")
+	public @Nullable enMachineComponentType componentType;
+
 	@Override
 	public void run() {
 		Stream<Machine> s = Mame.getInstance().machines();
@@ -31,10 +33,15 @@ public class M_Containers implements Runnable {
 		s = machinesOptions.filter(s);
 		s.forEach(m -> {
 			System.out.println(m);
-			Map<Path, Set<MachineComponent>> containers = m.getAvailableContainers();
-			for (Map.Entry<Path, Set<MachineComponent>> e : containers.entrySet()) {
-				System.out.println("\t" + e.getKey() + "\t" + e.getValue().stream().collect(Collectors.groupingBy(MachineComponent::type)).keySet());
-			}
+			Stream<Containers<? extends MachineComponent>> c;
+			if (componentType == null)
+				c = m.componentFiles();
+			else
+				c = componentType.containersFrom(m);
+			c.flatMap(Containers::unfold)
+					.collect(groupingBy(Container::path))
+					.forEach((path, containers)
+							-> System.out.println("\t" + path + "\t" + containers.stream().collect(groupingBy(container -> container.comp.type())).keySet()));
 		});
 	}
 

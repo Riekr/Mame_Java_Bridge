@@ -1,6 +1,8 @@
 package com.riekr.mame.callables;
 
+import com.riekr.mame.beans.Containers;
 import com.riekr.mame.beans.Machine;
+import com.riekr.mame.beans.enMachineComponentType;
 import com.riekr.mame.mixins.MachinesOptions;
 import com.riekr.mame.mixins.ParallelOptions;
 import com.riekr.mame.tools.Mame;
@@ -30,17 +32,20 @@ public class M_Missing implements Runnable {
 	@CommandLine.Mixin
 	public @NotNull ParallelOptions parallelOptions = new ParallelOptions();
 
+	@CommandLine.Option(names = "--component-type", description = "Limit missing file search to component type")
+	public @NotNull enMachineComponentType componentType = enMachineComponentType.ROM;
+
 	@Override
 	public void run() {
-		Stream<Machine> s = Mame.getInstance().machines();
+		Stream<Machine> machines = Mame.getInstance().machines();
 		if (names != null && !names.isEmpty())
-			s = s.filter(m -> names.contains(m.name));
-		s = machinesOptions.filter(s);
-		s = parallelOptions.parallelize(s);
-		s = s.filter(m -> m.getAvailableContainers().isEmpty());
+			machines = machines.filter(m -> names.contains(m.name));
+		machines = machinesOptions.filter(machines);
+		machines = parallelOptions.parallelize(machines);
+		machines = machines.filter(machine -> componentType.containersFrom(machine).anyMatch(Containers::isEmpty));
 		AtomicInteger count = new AtomicInteger();
 		PrintStream ps = PrintStreamTee.to(out);
-		s.forEach(m -> {
+		machines.forEach(m -> {
 			count.incrementAndGet();
 			ps.println(m);
 		});

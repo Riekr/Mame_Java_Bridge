@@ -114,6 +114,11 @@ public class Mame implements Serializable {
 	}
 
 	@NotNull
+	public Set<Path> getSamplePath() {
+		return _config.samplePath;
+	}
+
+	@NotNull
 	public Stream<SoftwareList> softwareLists() {
 		Sync.condInit(this, () -> _softwareLists == null, () -> {
 			try {

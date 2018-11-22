@@ -15,10 +15,10 @@ import java.util.function.Supplier;
 public class ConfigFactory implements Supplier<MameConfig> {
 
 	@CommandLine.Option(names = "--mame", description = "Mame executable")
-	public Path mame;
+	public Path mameExec;
 
 	@CommandLine.Option(names = "--chdman", description = "ChdMan executable")
-	public Path chdman;
+	public Path chdManExec;
 
 	@CommandLine.Option(names = "--rompath", split = ":;", description = "Paths to search for machines")
 	public Set<Path> romPath;
@@ -73,10 +73,10 @@ public class ConfigFactory implements Supplier<MameConfig> {
 
 	@Override
 	public MameConfig get() {
-		if (mame == null || mame.getNameCount() == 1)
-			mame = findExecInPath(mame, "mame", "mame64");
+		if (mameExec == null || mameExec.getNameCount() == 1)
+			mameExec = findExecInPath(mameExec, "mame", "mame64");
 		if (baseDir == null)
-			baseDir = mame.getParent();
+			baseDir = mameExec.getParent();
 		if (ini == null && baseDir != null) {
 			ini = baseDir.resolve("mame.ini");
 			if (!Files.isReadable(ini))
@@ -95,9 +95,9 @@ public class ConfigFactory implements Supplier<MameConfig> {
 			else if (baseDir != null)
 				samplePath = searchPaths(baseDir, "samples");
 		}
-		if (chdman == null || chdman.getNameCount() == 1) {
-			chdman = findExecInPath(chdman, "chdman");
+		if (chdManExec == null || chdManExec.getNameCount() == 1) {
+			chdManExec = findExecInPath(chdManExec, "chdman");
 		}
-		return new MameConfig(mame, chdman, romPath, cacheId);
+		return new MameConfig(mameExec, chdManExec, romPath, samplePath, cacheId);
 	}
 }

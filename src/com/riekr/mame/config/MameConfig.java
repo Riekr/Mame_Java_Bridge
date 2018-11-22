@@ -17,20 +17,25 @@ import java.util.Set;
 
 public class MameConfig implements Externalizable {
 
-	public @NotNull Path mameExec;
-	public @Nullable Path chdManExec;
-	public @NotNull Set<Path> romPath;
-	public @Nullable Path cacheFile;
+	public @NotNull  Path      mameExec;
+	public @Nullable Path      chdManExec;
+	public @NotNull  Set<Path> romPath;
+	public @NotNull  Set<Path> samplePath;
+	public @Nullable Path      cacheFile;
 
 	public MameConfig() {
 	}
 
-	public MameConfig(@NotNull Path mameExec, @Nullable Path chdManExec, @Nullable Set<Path> romPath, String id) {
+	public MameConfig(@NotNull Path mameExec, @Nullable Path chdManExec, @Nullable Set<Path> romPath, @Nullable Set<Path> samplePath, String id) {
 		this.mameExec = mameExec;
 		if (romPath == null || romPath.isEmpty())
 			this.romPath = Collections.emptySet();
 		else
 			this.romPath = Collections.unmodifiableSet(romPath);
+		if (samplePath == null || samplePath.isEmpty())
+			this.samplePath = Collections.emptySet();
+		else
+			this.samplePath = Collections.unmodifiableSet(samplePath);
 		if (id == null || id.isBlank())
 			cacheFile = null;
 		else
@@ -44,25 +49,32 @@ public class MameConfig implements Externalizable {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		MameConfig config = (MameConfig) o;
-		return Objects.equals(mameExec, config.mameExec) && Objects.equals(romPath, config.romPath);
+		return Objects.equals(mameExec, config.mameExec)
+				&& Objects.equals(chdManExec, config.chdManExec)
+				&& Objects.equals(romPath, config.romPath)
+				&& Objects.equals(samplePath, config.samplePath);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(mameExec, romPath);
+		return Objects.hash(mameExec, chdManExec, romPath, samplePath);
 	}
 
 	@Override
 	public void writeExternal(ObjectOutput out) throws IOException {
 		SerUtils.writePath(out, mameExec);
+		SerUtils.writePath(out, chdManExec);
 		SerUtils.writePaths(out, romPath);
+		SerUtils.writePaths(out, samplePath);
 		SerUtils.writePath(out, cacheFile);
 	}
 
 	@Override
 	public void readExternal(ObjectInput in) throws IOException, ClassNotFoundException {
 		mameExec = Objects.requireNonNull(SerUtils.readPath(in));
+		chdManExec = Objects.requireNonNull(SerUtils.readPath(in));
 		romPath = Collections.unmodifiableSet(Objects.requireNonNull(SerUtils.readPathSet(in)));
+		samplePath = Collections.unmodifiableSet(Objects.requireNonNull(SerUtils.readPathSet(in)));
 		cacheFile = SerUtils.readPath(in);
 		check();
 	}

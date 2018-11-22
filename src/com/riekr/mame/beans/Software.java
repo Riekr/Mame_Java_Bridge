@@ -1,5 +1,7 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.attrs.Completable;
+import com.riekr.mame.attrs.Mergeable;
 import com.riekr.mame.tools.MameException;
 import com.riekr.mame.utils.MameXmlChildOf;
 import com.riekr.mame.utils.Sync;
@@ -19,7 +21,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-public class Software extends MameXmlChildOf<SoftwareList> implements Serializable {
+public class Software extends MameXmlChildOf<SoftwareList> implements Serializable, Mergeable, Completable {
 
 	@XmlAttribute
 	public String name;
@@ -104,18 +106,12 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 		return getRoots(invalidateCache).size() > 0;
 	}
 
-	public boolean isComplete() {
-		return isComplete(false);
-	}
-
+	@Override
 	public boolean isComplete(boolean invalidateCache) {
 		return disks().allMatch(sd -> sd.isAvailable(invalidateCache));
 	}
 
-	public boolean mergeIntoParent(boolean dryRun) {
-		return mergeIntoParent(dryRun, false);
-	}
-
+	@Override
 	public boolean mergeIntoParent(boolean dryRun, boolean invalidateCache) {
 		Software parent = getParent();
 		if (parent == null)

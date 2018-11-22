@@ -1,5 +1,7 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.attrs.Completable;
+import com.riekr.mame.attrs.Mergeable;
 import com.riekr.mame.tools.MameException;
 import com.riekr.mame.utils.MameXmlChildOf;
 import com.riekr.mame.utils.Sync;
@@ -16,7 +18,7 @@ import java.util.stream.Stream;
 import static com.riekr.mame.beans.enYesNo.no;
 import static com.riekr.mame.beans.enYesNo.yes;
 
-public class Machine extends MameXmlChildOf<Machines> implements Serializable {
+public class Machine extends MameXmlChildOf<Machines> implements Serializable, Mergeable, Completable {
 
 	@XmlAttribute
 	public String name;
@@ -197,6 +199,12 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 		return _mergedRomSet;
 	}
 
+	@Override
+	public boolean mergeIntoParent(boolean dryRun, boolean invalidateCache) {
+		// TODO to be implemented
+		throw new UnsupportedOperationException();
+	}
+
 	// TODO full merged
 
 	@Override
@@ -259,5 +267,10 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable {
 		res.append(name).append(": ").append(description).append(' ');
 		getTypeDescr(res);
 		return res.toString();
+	}
+
+	@Override
+	public boolean isComplete(boolean invalidateCache) {
+		return components().allMatch(machineComponent -> machineComponent.isAvailable(invalidateCache));
 	}
 }

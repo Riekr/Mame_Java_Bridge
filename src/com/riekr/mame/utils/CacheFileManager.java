@@ -26,11 +26,11 @@ public final class CacheFileManager extends Thread {
 				}
 			}
 		}
-		_WRITES.computeIfPresent(cacheFile, (path, newMame) -> {
-			if (newMame != mame)
-				throw new IllegalStateException("Another mame instance is already associated to cache file " + path);
-			return newMame;
-		});
+		Mame oldMame = _WRITES.put(cacheFile, mame);
+		if (oldMame != null && oldMame != mame) {
+			_WRITES.put(cacheFile, oldMame);
+			throw new IllegalStateException("Another mame instance is already associated to cache file " + cacheFile);
+		}
 	}
 
 	public static void invalidate(Path cacheFile) {

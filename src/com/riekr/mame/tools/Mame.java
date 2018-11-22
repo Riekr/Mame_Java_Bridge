@@ -10,18 +10,14 @@ import com.riekr.mame.utils.CacheFileManager;
 import com.riekr.mame.utils.JaxbUtils;
 import com.riekr.mame.utils.Sha1;
 import com.riekr.mame.utils.Sync;
+import com.riekr.mame.xmlsource.XmlSourceRef;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 
 public class Mame implements Serializable {
 
@@ -35,55 +31,17 @@ public class Mame implements Serializable {
 	}
 
 	@NotNull
-	private static Mame prepare(@NotNull Mame newInstance) {
-		newInstance._execLastModified = newInstance._config.mameExec.toFile().lastModified();
-		newInstance.requestCachesWrite();
-		return newInstance;
-	}
-
-	@NotNull
 	public static Mame newInstance(@NotNull Supplier<MameConfig> configSupplier) {
 		return newInstance(configSupplier.get());
 	}
 
 	@NotNull
 	public static Mame newInstance(@NotNull MameConfig config) {
-		Mame res = loadFromCache(config.cacheFile);
+		Mame res = CacheFileManager.loadCache(config.cacheFile);
 		if (res == null)
-			res = prepare(new Mame(config));
-		else {
-			if (res._execLastModified != res._config.mameExec.toFile().lastModified()) {
-				Mame newInstance = new Mame(res._config);
-				if (!newInstance.version().equals(res._version))
-					res = prepare(newInstance);
-				else
-					prepare(res);
-			}
-		}
+			res = new Mame(config);
+		res._config.check();
 		return res;
-	}
-
-	@Nullable
-	private static Mame loadFromCache(@Nullable Path cacheFile) {
-		if (cacheFile == null || !Files.isReadable(cacheFile))
-			return null;
-		try {
-			System.out.println("Loading caches from " + cacheFile);
-			Mame mame;
-			try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(Files.newInputStream(cacheFile)))) {
-				mame = (Mame) ois.readObject();
-			}
-			if (mame != null) {
-				System.out.println("Restored cache for version " + mame._version);
-				return mame;
-			}
-		} catch (InvalidClassException e) {
-			System.err.println("Cache format changed, data invalidated.");
-		} catch (Exception e) {
-			System.err.println("Unable to read " + cacheFile);
-			e.printStackTrace(System.err);
-		}
-		return null;
 	}
 
 	public void invalidateCaches(boolean permanent) {
@@ -93,7 +51,6 @@ public class Mame implements Serializable {
 			else
 				CacheFileManager.removeCache(_config.cacheFile);
 		}
-		_version = null;
 		_softwareLists = null;
 		_machines = null;
 	}
@@ -105,8 +62,6 @@ public class Mame implements Serializable {
 	private          MameConfig    _config;
 	private volatile SoftwareLists _softwareLists;
 	private volatile Machines      _machines;
-	private volatile String        _version;
-	private          long          _execLastModified;
 
 	@NotNull
 	public Set<Path> getRomPath() {
@@ -120,15 +75,14 @@ public class Mame implements Serializable {
 
 	@NotNull
 	public Stream<SoftwareList> softwareLists() {
-		Sync.condInit(this, () -> _softwareLists == null, () -> {
+		if (_config.softwaresXmlRef == null) {
+			System.err.println("w: software lists not available.");
+			return Stream.empty();
+		}
+		Sync.condInit(this, () -> _softwareLists == null || _config.softwaresXmlRef.isOutDated(), () -> {
 			try {
-				System.out.println("Getting software lists for v" + version());
-				File home = _config.mameExec.getParent().toFile();
-				Process proc = new ProcessBuilder(_config.mameExec.toString(), "-getsoftlist")
-						.directory(home)
-						.start();
-				System.out.println("Parsing software lists...");
-				try (InputStream is = proc.getInputStream()) {
+				try (InputStream is = _config.softwaresXmlRef.newInputStream(XmlSourceRef.Type.SOFTWARES)) {
+					System.out.println("Parsing software lists...");
 					_softwareLists = JaxbUtils.unmarshal(is, SoftwareLists.class);
 				}
 				_softwareLists.setParentNode(this);
@@ -144,15 +98,14 @@ public class Mame implements Serializable {
 
 	@NotNull
 	public Stream<Machine> machines() {
-		Sync.condInit(this, () -> _machines == null, () -> {
+		if (_config.machinesXmlRef == null) {
+			System.err.println("w: machines not available.");
+			return Stream.empty();
+		}
+		Sync.condInit(this, () -> _machines == null || _config.machinesXmlRef.isOutDated(), () -> {
 			try {
-				System.out.println("Getting machines for v" + version());
-				File home = _config.mameExec.getParent().toFile();
-				Process proc = new ProcessBuilder(_config.mameExec.toString(), "-listxml")
-						.directory(home)
-						.start();
-				System.out.println("Parsing machines...");
-				try (InputStream is = proc.getInputStream()) {
+				try (InputStream is = _config.machinesXmlRef.newInputStream(XmlSourceRef.Type.MACHINES)) {
+					System.out.println("Parsing machines...");
 					_machines = JaxbUtils.unmarshal(is, Machines.class);
 				}
 				_machines.setParentNode(this);
@@ -164,36 +117,6 @@ public class Mame implements Serializable {
 			}
 		});
 		return _machines.machines == null ? Stream.empty() : _machines.machines.stream();
-	}
-
-	@NotNull
-	public String version() {
-		Sync.condInit(this, () -> _version == null, () -> {
-			_version = "<undef>";
-			try {
-				System.out.println("Getting mame version from " + _config.mameExec);
-				File home = _config.mameExec.getParent().toFile();
-				Process proc = new ProcessBuilder(_config.mameExec.toString(), "-help")
-						.directory(home)
-						.start();
-				// MAME v0.203 (mame0203)
-				try (BufferedReader reader = new BufferedReader(new InputStreamReader(proc.getInputStream()))) {
-					Matcher m = Pattern.compile("MAME\\s+v([0-9.]+)\\s+.*").matcher("");
-					String line;
-					while ((line = reader.readLine()) != null) {
-						m.reset(line);
-						if (m.matches()) {
-							_version = m.group(1);
-							break;
-						}
-					}
-				}
-			} catch (IOException e) {
-				System.err.println("Unable to get mame version");
-				e.printStackTrace(System.err);
-			}
-		});
-		return _version;
 	}
 
 	public String sha1(@NotNull Path file) {
@@ -222,10 +145,5 @@ public class Mame implements Serializable {
 	public void requestCachesWrite() {
 		if (_config.cacheFile != null)
 			CacheFileManager.register(_config.cacheFile, this);
-	}
-
-	@Override
-	public String toString() {
-		return _config.mameExec.getFileName() + " " + _version;
 	}
 }

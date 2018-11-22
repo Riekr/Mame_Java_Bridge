@@ -1,11 +1,15 @@
 package com.riekr.mame.utils;
 
 import com.riekr.mame.tools.Mame;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.InvalidClassException;
+import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static java.nio.file.StandardOpenOption.CREATE;
@@ -50,7 +54,7 @@ public final class CacheFileManager extends Thread {
 	}
 
 	private static void writeCache(Path path, Mame mame) {
-		System.out.println("Writing caches to " + path + " for " + mame);
+		System.out.println("Writing cache to " + path);
 		try {
 			Files.createDirectories(path.getParent());
 			try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(Files.newOutputStream(path, CREATE)))) {
@@ -77,6 +81,30 @@ public final class CacheFileManager extends Thread {
 			e.printStackTrace(System.err);
 		}
 	}
+
+	@Nullable
+	public static Mame loadCache(@Nullable Path cacheFile) {
+		if (cacheFile == null || !Files.isReadable(cacheFile))
+			return null;
+		try {
+			System.out.println("Loading caches from " + cacheFile);
+			Mame mame;
+			try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(Files.newInputStream(cacheFile)))) {
+				mame = (Mame) ois.readObject();
+			}
+			if (mame != null) {
+				System.out.println("Restored cache from " + cacheFile);
+				return mame;
+			}
+		} catch (InvalidClassException e) {
+			System.err.println("Cache format changed, data invalidated.");
+		} catch (Exception e) {
+			System.err.println("Unable to read " + cacheFile);
+			e.printStackTrace(System.err);
+		}
+		return null;
+	}
+
 
 	@Override
 	public void run() {

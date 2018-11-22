@@ -1,7 +1,7 @@
 package com.riekr.mame.config;
 
-import com.riekr.mame.tools.MameException;
 import com.riekr.mame.utils.CLIUtils;
+import com.riekr.mame.xmlsource.XmlSourceRef;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import picocli.CommandLine;
@@ -35,7 +35,16 @@ public class ConfigFactory implements Supplier<MameConfig> {
 	@CommandLine.Option(names = "--cache-id", defaultValue = "Mame", description = "Local mame cache id")
 	public String cacheId;
 
-	@NotNull
+	@CommandLine.Option(names = "--xml-machines", description = "Force machines xml to be read")
+	public Path machinesXml;
+
+	@CommandLine.Option(names = "--xml-softwares", description = "Force softwares xml to be read")
+	public Path softwaresXml;
+
+	@CommandLine.Option(names = "--cache-home", description = "Where to store cache files")
+	public Path cacheHome;
+
+	@Nullable
 	private Path findExecInPath(@Nullable Path specifiedName, String... otherNames) {
 		String[] names;
 		if (specifiedName == null) {
@@ -55,8 +64,6 @@ public class ConfigFactory implements Supplier<MameConfig> {
 					return exec;
 			}
 		}
-		if (exec == null)
-			throw new MameException("Mame executable not found in path");
 		return exec;
 	}
 
@@ -75,7 +82,7 @@ public class ConfigFactory implements Supplier<MameConfig> {
 	public MameConfig get() {
 		if (mameExec == null || mameExec.getNameCount() == 1)
 			mameExec = findExecInPath(mameExec, "mame", "mame64");
-		if (baseDir == null)
+		if (baseDir == null && mameExec != null)
 			baseDir = mameExec.getParent();
 		if (ini == null && baseDir != null) {
 			ini = baseDir.resolve("mame.ini");
@@ -98,6 +105,20 @@ public class ConfigFactory implements Supplier<MameConfig> {
 		if (chdManExec == null || chdManExec.getNameCount() == 1) {
 			chdManExec = findExecInPath(chdManExec, "chdman");
 		}
-		return new MameConfig(mameExec, chdManExec, romPath, samplePath, cacheId);
+		// apply config
+		MameConfig mameConfig = new MameConfig();
+		if (cacheId != null) {
+			Path home = cacheHome != null ? cacheHome : Path.of(System.getProperty("user.home"), ".com.riekr.mame");
+			mameConfig.cacheFile = home.resolve(cacheId + ".cache");
+		}
+		mameConfig.mameExec = mameExec;
+		mameConfig.chdManExec = chdManExec;
+		mameConfig.romPath = romPath;
+		mameConfig.samplePath = samplePath;
+		if (machinesXml != null)
+			mameConfig.machinesXmlRef = XmlSourceRef.from(machinesXml);
+		if (softwaresXml != null)
+			mameConfig.softwaresXmlRef = XmlSourceRef.from(softwaresXml);
+		return mameConfig;
 	}
 }

@@ -43,7 +43,7 @@ public class M_Missing implements Runnable {
 		machines = machinesOptions.filter(machines);
 		machines = parallelOptions.parallelize(machines);
 		machines = machines.filter(machine
-				-> componentType.streamFrom(machine).anyMatch(MachineComponent::haNoAvailableContainers));
+				-> componentType.streamFrom(machine).anyMatch(MachineComponent::isNotAvailable));
 		AtomicInteger count = new AtomicInteger();
 		PrintStream ps = PrintStreamTee.to(out);
 		machines.forEach(m -> {

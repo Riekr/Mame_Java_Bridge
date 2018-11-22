@@ -1,5 +1,7 @@
-package com.riekr.mame.beans;
+package com.riekr.mame.attrs;
 
+import com.riekr.mame.beans.Container;
+import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.FileInfo;
 import com.riekr.mame.utils.MameXmlChildOf;
 import com.riekr.mame.utils.SerUtils;
@@ -28,9 +30,39 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 		return res.stream();
 	}
 
+	public static boolean validateSha1(ContainersCapable<?> cc, boolean invalidateCache, String expectedSha1) {
+		Set<Path> files = cc.getAvailableContainers(invalidateCache);
+		if (files.isEmpty())
+			return false;
+		if (files.size() > 1) {
+			System.err.println("WARNING multiple disk images detected in different rompaths:");
+			for (Path f : files)
+				System.err.println("\t" + f);
+		}
+		Mame mame = cc.getMame();
+		//noinspection SynchronizationOnLocalVariableOrMethodParameter
+		synchronized (cc) {
+			for (Path file : files) {
+				FileInfo info = cc.getFileInfo(file);
+				if (info.sha1 == null) {
+					System.out.println("Calculating sha1 of " + file);
+					info.sha1 = mame.sha1(file);
+					cc.notifyCachedDataChanged();
+					if (!info.sha1.equalsIgnoreCase(expectedSha1)) {
+						System.err.println("SHA1 of " + file + " mismatch:");
+						System.err.println("\t" + expectedSha1 + " (mame)");
+						System.err.println("\t" + info.sha1 + " (file)");
+						return false;
+					}
+				}
+			}
+		}
+		return true;
+	}
 
-	private Map<Path, FileInfo> _containersInfo;
-	private transient volatile Set<Path> _containers;
+
+	private                    Map<Path, FileInfo> _containersInfo;
+	private transient volatile Set<Path>           _containers;
 
 	@NotNull
 	protected abstract Set<Path> getAvailableContainersImpl(boolean invalidateCache);
@@ -71,11 +103,19 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 		return getAvailableContainers(invalidateCache).stream();
 	}
 
-	public final boolean haNoAvailableContainers() {
-		return haNoAvailableContainers(false);
+	public final boolean isAvailable() {
+		return isAvailable(false);
 	}
 
-	public final boolean haNoAvailableContainers(boolean invalidateCache) {
+	public final boolean isAvailable(boolean invalidateCache) {
+		return getAvailableContainers(invalidateCache).size() > 0;
+	}
+
+	public final boolean isNotAvailable() {
+		return isNotAvailable(false);
+	}
+
+	public final boolean isNotAvailable(boolean invalidateCache) {
 		return getAvailableContainers(invalidateCache).isEmpty();
 	}
 

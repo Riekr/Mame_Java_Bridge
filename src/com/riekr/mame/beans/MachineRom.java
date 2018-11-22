@@ -1,5 +1,6 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.attrs.Validable;
 import com.riekr.mame.tools.Mame;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,7 +13,7 @@ import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
-public class MachineRom extends MachineComponent implements Serializable {
+public class MachineRom extends MachineComponent implements Serializable, Validable {
 
 	@XmlAttribute
 	public String name;
@@ -81,5 +82,10 @@ public class MachineRom extends MachineComponent implements Serializable {
 	@Override
 	public enMachineComponentType type() {
 		return enMachineComponentType.ROM;
+	}
+
+	@Override
+	public boolean isValid(boolean invalidateCache) {
+		return validateSha1(this, invalidateCache, sha1);
 	}
 }

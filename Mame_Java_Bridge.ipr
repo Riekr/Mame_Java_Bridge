@@ -895,6 +895,31 @@
         </option>
       </inspection_tool>
       <inspection_tool class="BadOddness" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashAddShebang" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashBuiltInVariable" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashDuplicateFunction" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashEvaluateArithmeticExpression" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashEvaluateExpression" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashFixShebang" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashFloatArithmetic" enabled="false" level="INFO" enabled_by_default="false" />
+      <inspection_tool class="BashFunctionNamesShouldBeLowerSnakeCase" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashGlobalLocalVarDef" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashGloballyRegisteredVariable" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashInternalCommandFunctionOverride" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashMissingInclude" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashReadOnlyVariable" enabled="false" level="ERROR" enabled_by_default="false" />
+      <inspection_tool class="BashRecursiveInclusion" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashReplaceWithBackquote" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashReplaceWithDoubleBrackets" enabled="false" level="INFO" enabled_by_default="false" />
+      <inspection_tool class="BashReplaceWithSubshell" enabled="false" level="INFO" enabled_by_default="false" />
+      <inspection_tool class="BashSimpleArrayUse" enabled="false" level="INFO" enabled_by_default="false" />
+      <inspection_tool class="BashSimpleVarUsage" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashUnknownFileDescriptor" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashUnresolvedVariable" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashUnusedFunction" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashUnusedFunctionParams" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashWrapFunction" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+      <inspection_tool class="BashWrapWord" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
       <inspection_tool class="BeforeClassOrAfterClassIsPublicStaticVoidNoArg" enabled="false" level="WARNING" enabled_by_default="false" />
       <inspection_tool class="BeforeOrAfterIsPublicVoidNoArg" enabled="false" level="WARNING" enabled_by_default="false" />
       <inspection_tool class="BigDecimalEquals" enabled="false" level="WARNING" enabled_by_default="false" />
@@ -1473,6 +1498,7 @@
       <inspection_tool class="HardcodedLineSeparators" enabled="false" level="WARNING" enabled_by_default="false" />
       <inspection_tool class="HardwiredNamespacePrefix" enabled="true" level="WARNING" enabled_by_default="true" />
       <inspection_tool class="HashCodeUsesNonFinalVariable" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="HbEmptyBlock" enabled="false" level="WARNING" enabled_by_default="false" />
       <inspection_tool class="HibernateResource" enabled="false" level="WARNING" enabled_by_default="false">
         <option name="insideTryAllowed" value="false" />
       </inspection_tool>
@@ -1802,7 +1828,7 @@
       <inspection_tool class="MissingDeprecatedAnnotation" enabled="false" level="WARNING" enabled_by_default="false" />
       <inspection_tool class="MissingFinalNewline" enabled="true" level="ERROR" enabled_by_default="true" />
       <inspection_tool class="MissingMnemonic" enabled="true" level="WARNING" enabled_by_default="true" />
-      <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="INFORMATION" enabled_by_default="true">
+      <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="WEAK WARNING" enabled_by_default="true">
         <option name="ignoreObjectMethods" value="true" />
         <option name="ignoreAnonymousClassMethods" value="false" />
       </inspection_tool>
@@ -2552,6 +2578,11 @@
       <inspection_tool class="XsltTemplateInvocation" enabled="true" level="ERROR" enabled_by_default="true" />
       <inspection_tool class="XsltUnusedDeclaration" enabled="true" level="WARNING" enabled_by_default="true" />
       <inspection_tool class="XsltVariableShadowing" enabled="true" level="WARNING" enabled_by_default="true" />
+      <inspection_tool class="YAMLDuplicatedKeys" enabled="false" level="ERROR" enabled_by_default="false" />
+      <inspection_tool class="YAMLRecursiveAlias" enabled="false" level="ERROR" enabled_by_default="false" />
+      <inspection_tool class="YAMLSchemaValidation" enabled="false" level="WARNING" enabled_by_default="false" />
+      <inspection_tool class="YAMLUnresolvedAlias" enabled="false" level="ERROR" enabled_by_default="false" />
+      <inspection_tool class="YAMLUnusedAnchor" enabled="false" level="WARNING" enabled_by_default="false" />
       <inspection_tool class="ZeroLengthArrayInitialization" enabled="false" level="WARNING" enabled_by_default="false" />
       <inspection_tool class="dependsOnMethodTestNG" enabled="true" level="WARNING" enabled_by_default="true" />
       <inspection_tool class="groupsTestNG" enabled="true" level="WARNING" enabled_by_default="true">

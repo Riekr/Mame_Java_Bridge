@@ -1,6 +1,6 @@
 package com.riekr.mame.callables;
 
-import com.riekr.mame.beans.ContainersCapable;
+import com.riekr.mame.attrs.ContainersCapable;
 import com.riekr.mame.beans.Machine;
 import com.riekr.mame.beans.MachineComponent;
 import com.riekr.mame.beans.enMachineComponentType;

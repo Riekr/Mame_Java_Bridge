@@ -14,7 +14,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
 
-public abstract class ContainersCapable<ParentType extends Serializable> extends MameXmlChildOf<ParentType> {
+public abstract class ContainersCapable<ParentType extends Serializable> extends MameXmlChildOf<ParentType> implements AvailabilityCapable {
 
 	public static <T extends ContainersCapable> Stream<Container<T>> unfold(@NotNull T containerCapable) {
 		return unfold(containerCapable, false);
@@ -103,20 +103,9 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 		return getAvailableContainers(invalidateCache).stream();
 	}
 
-	public final boolean isAvailable() {
-		return isAvailable(false);
-	}
-
+	@Override
 	public final boolean isAvailable(boolean invalidateCache) {
 		return getAvailableContainers(invalidateCache).size() > 0;
-	}
-
-	public final boolean isNotAvailable() {
-		return isNotAvailable(false);
-	}
-
-	public final boolean isNotAvailable(boolean invalidateCache) {
-		return getAvailableContainers(invalidateCache).isEmpty();
 	}
 
 	private void writeObject(java.io.ObjectOutputStream out) throws IOException {

@@ -1,5 +1,6 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.attrs.AvailabilityCapable;
 import com.riekr.mame.attrs.Completable;
 import com.riekr.mame.attrs.Mergeable;
 import com.riekr.mame.tools.MameException;
@@ -21,7 +22,7 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-public class Software extends MameXmlChildOf<SoftwareList> implements Serializable, Mergeable, Completable {
+public class Software extends MameXmlChildOf<SoftwareList> implements Serializable, Mergeable, Completable, AvailabilityCapable {
 
 	@XmlAttribute
 	public String name;
@@ -98,10 +99,7 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 		return cloneof != null;
 	}
 
-	public boolean isAvailable() {
-		return isAvailable(false);
-	}
-
+	@Override
 	public boolean isAvailable(boolean invalidateCache) {
 		return getRoots(invalidateCache).size() > 0;
 	}

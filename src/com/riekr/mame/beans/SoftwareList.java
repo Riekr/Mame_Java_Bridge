@@ -1,5 +1,6 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.attrs.AvailabilityCapable;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.MameXmlChildOf;
 import com.riekr.mame.utils.Sync;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Serializable {
+public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Serializable, AvailabilityCapable {
 
 	@XmlAttribute
 	public String name;
@@ -55,10 +56,7 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 		return _roots;
 	}
 
-	public boolean isAvailable() {
-		return isAvailable(false);
-	}
-
+	@Override
 	public boolean isAvailable(boolean invalidateCache) {
 		return getRoots(invalidateCache).size() > 0;
 	}

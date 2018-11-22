@@ -6,6 +6,7 @@ import com.riekr.mame.beans.SoftwareList;
 import com.riekr.mame.beans.SoftwareLists;
 import com.riekr.mame.config.ConfigFactory;
 import com.riekr.mame.config.MameConfig;
+import com.riekr.mame.utils.CacheFileManager;
 import com.riekr.mame.utils.JaxbUtils;
 import com.riekr.mame.utils.Sha1;
 import com.riekr.mame.utils.Sync;
@@ -16,20 +17,16 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
-import static java.nio.file.StandardOpenOption.CREATE;
 
 public class Mame implements Serializable {
 
 	public static final ConfigFactory DEFAULT_CONFIG_FACTORY = new ConfigFactory();
-	private static Mame _DEFAULT_INSTANCE;
+	private static      Mame          _DEFAULT_INSTANCE;
 
 	public static Mame getInstance() {
 		Sync.condInit(Mame.class, () -> _DEFAULT_INSTANCE == null,
@@ -77,7 +74,6 @@ public class Mame implements Serializable {
 				mame = (Mame) ois.readObject();
 			}
 			if (mame != null) {
-				mame._writeCacheRequested = new AtomicBoolean(false);
 				System.out.println("Restored cache for version " + mame._version);
 				return mame;
 			}
@@ -90,42 +86,27 @@ public class Mame implements Serializable {
 		return null;
 	}
 
-	public void flushCaches() {
-		if (_config.cacheFile == null)
-			return;
-		if (_writeCacheRequested.compareAndSet(true, false)) {
-			synchronized (_config.cacheFile) {
-				System.out.println("Writing caches to " + _config.cacheFile);
-				try {
-					Files.createDirectories(_config.cacheFile.getParent());
-					try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(Files.newOutputStream(_config.cacheFile, CREATE)))) {
-						oos.writeObject(this);
-					}
-				} catch (Exception e) {
-					System.err.println("Unable to write " + _config.cacheFile);
-					e.printStackTrace(System.err);
-				}
-			}
+	public void invalidateCaches(boolean permanent) {
+		if (_config.cacheFile != null) {
+			if (permanent)
+				CacheFileManager.invalidate(_config.cacheFile);
+			else
+				CacheFileManager.removeCache(_config.cacheFile);
 		}
-	}
-
-	public void invalidateCaches() {
-		if (_config.cacheFile != null)
-			_config.cacheFile.toFile().deleteOnExit();
 		_version = null;
 		_softwareLists = null;
+		_machines = null;
 	}
 
 	private Mame(MameConfig config) {
 		_config = config;
 	}
 
-	private MameConfig _config;
+	private          MameConfig    _config;
 	private volatile SoftwareLists _softwareLists;
-	private volatile Machines _machines;
-	private volatile String _version;
-	private long _execLastModified;
-	private transient AtomicBoolean _writeCacheRequested = new AtomicBoolean(false);
+	private volatile Machines      _machines;
+	private volatile String        _version;
+	private          long          _execLastModified;
 
 	@NotNull
 	public Set<Path> getRomPath() {
@@ -234,10 +215,8 @@ public class Mame implements Serializable {
 	}
 
 	public void requestCachesWrite() {
-		if (_writeCacheRequested.compareAndSet(false, true)) {
-			if (_config.cacheFile != null)
-				Runtime.getRuntime().addShutdownHook(new Thread(this::flushCaches));
-		}
+		if (_config.cacheFile != null)
+			CacheFileManager.register(_config.cacheFile, this);
 	}
 
 	@Override

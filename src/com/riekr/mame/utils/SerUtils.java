@@ -66,6 +66,7 @@ public final class SerUtils {
 			return null;
 		HashMap<Path, T> res = new HashMap<>(sz);
 		for (int i = 0; i < sz; i++)
+			//noinspection unchecked
 			res.put(readPath(in), (T) in.readObject());
 		return res;
 	}

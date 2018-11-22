@@ -473,6 +473,7 @@
       <item index="0" class="java.lang.String" itemvalue="javax.xml.bind.annotation.XmlAttribute" />
       <item index="1" class="java.lang.String" itemvalue="javax.xml.bind.annotation.XmlElement" />
     </list>
+    <pattern value="com.riekr.mame.utils.MameXmlChildOf" hierarchically="true" />
     <pattern value="java.lang.Enum" hierarchically="true" method="*" />
     <writeAnnotations>
       <writeAnnotation name="javax.xml.bind.annotation.XmlAttribute" />

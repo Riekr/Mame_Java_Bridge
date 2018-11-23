@@ -1,6 +1,7 @@
 package com.riekr.mame.config;
 
 import com.riekr.mame.utils.CLIUtils;
+import com.riekr.mame.utils.INI;
 import com.riekr.mame.xmlsource.XmlSourceRef;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -14,35 +15,48 @@ import java.util.function.Supplier;
 
 public class ConfigFactory implements Supplier<MameConfig> {
 
+	@INI.Config("mame")
 	@CommandLine.Option(names = "--mame", description = "Mame executable")
 	public Path mameExec;
 
+	@INI.Config("chdman")
 	@CommandLine.Option(names = "--chdman", description = "ChdMan executable")
 	public Path chdManExec;
 
+	@INI.Config("rom-path")
 	@CommandLine.Option(names = "--rompath", split = ":;", description = "Paths to search for machines")
 	public Set<Path> romPath;
 
+	@INI.Config("sample-path")
 	@CommandLine.Option(names = "--samplepath", split = ":;", description = "Paths to search for samples")
 	public Set<Path> samplePath;
 
+	@INI.Config({"mame-ini", "mameini"})
 	@CommandLine.Option(names = "--mame-ini", description = "Mame.ini to load configurations from")
 	public Path ini;
 
+	@INI.Config({"mame-dir", "mamedir", "base-dir"})
 	@CommandLine.Option(names = "--mame-dir", description = "Mame base directory for relative paths")
 	public Path baseDir;
 
+	@INI.Config("cache-id")
 	@CommandLine.Option(names = "--cache-id", defaultValue = "Mame", description = "Local mame cache id")
 	public String cacheId;
 
+	@INI.Config({"machines", "machines-xml", "xmlmachines", "xml-machines"})
 	@CommandLine.Option(names = "--xml-machines", description = "Force machines xml to be read")
 	public Path machinesXml;
 
+	@INI.Config({"softwares", "softwares-xml", "xmlsoftwares", "xml-softwares"})
 	@CommandLine.Option(names = "--xml-softwares", description = "Force softwares xml to be read")
 	public Path softwaresXml;
 
+	@INI.Config("cache-home")
 	@CommandLine.Option(names = "--cache-home", description = "Where to store cache files")
 	public Path cacheHome;
+
+	@CommandLine.Option(names = "--config-file", description = "Optional configuration file")
+	public Path configFile;
 
 	@Nullable
 	private Path findExecInPath(@Nullable Path specifiedName, String... otherNames) {
@@ -80,6 +94,8 @@ public class ConfigFactory implements Supplier<MameConfig> {
 
 	@Override
 	public MameConfig get() {
+		if (configFile != null)
+			INI.load(configFile, this);
 		if (mameExec == null || mameExec.getNameCount() == 1)
 			mameExec = findExecInPath(mameExec, "mame", "mame64");
 		if (baseDir == null && mameExec != null)

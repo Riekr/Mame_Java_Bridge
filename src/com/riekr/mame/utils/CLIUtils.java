@@ -40,6 +40,7 @@ public final class CLIUtils {
 				cl = new CommandLine(new UsageHelp());
 				cl.addMixin(instance.getClass().getSimpleName(), instance);
 			}
+			Mame.DEFAULT_CONFIG_FACTORY.configFile = Path.of("config.local");
 			cl.addMixin("MameConfig", Mame.DEFAULT_CONFIG_FACTORY);
 			cl.setResourceBundle(ResourceBundle.getBundle("com.riekr.mame.callables.cmdline"));
 			try {
@@ -66,8 +67,6 @@ public final class CLIUtils {
 			if (e.getKey().equalsIgnoreCase("PATH"))
 				Collections.addAll(searchPaths, e.getValue().split("\\Q" + File.pathSeparatorChar + "\\E"));
 		}
-		if (System.getProperty("os.name").toLowerCase().contains("win"))
-			searchPaths.add("D:\\Giochi\\Mame");
 		for (String s : searchPaths) {
 			Path searchPath = Path.of(s);
 			if (!Files.isDirectory(searchPath))

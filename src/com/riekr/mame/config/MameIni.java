@@ -1,6 +1,7 @@
 package com.riekr.mame.config;
 
 import com.riekr.mame.tools.MameException;
+import com.riekr.mame.utils.INI;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -17,15 +18,15 @@ import java.util.stream.Stream;
 
 class MameIni {
 
-	private final @NotNull Path                _iniFile;
+	private final @NotNull Path _iniFile;
 	private final @NotNull Map<String, String> _config = new HashMap<>();
 
 	public MameIni(@NotNull Path iniFile) {
 		System.out.println("Reading " + iniFile);
 		_iniFile = iniFile;
-		Matcher dec = Pattern.compile("^([^#]\\w+)\\s+(.+)$").matcher("");
+		Matcher dec = INI.PATTERN.matcher("");
 		try (Stream<String> stream = Files.lines(iniFile)) {
-			stream.map(String::trim).forEach(line -> {
+			stream.forEach(line -> {
 				dec.reset(line);
 				if (dec.matches())
 					_config.put(dec.group(1), dec.group(2));

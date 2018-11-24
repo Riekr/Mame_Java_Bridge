@@ -67,7 +67,7 @@ public final class CacheFileManager extends Thread {
 	}
 
 	public static void removeCache(Path path) {
-		System.out.println("Deleting caches from " + path);
+		System.out.println("Deleting cache from " + path);
 		try {
 			if (Files.deleteIfExists(path)) {
 				Path parent = path.getParent();
@@ -87,7 +87,7 @@ public final class CacheFileManager extends Thread {
 		if (cacheFile == null || !Files.isReadable(cacheFile))
 			return null;
 		try {
-			System.out.println("Loading caches from " + cacheFile);
+			System.out.println("Loading cache from " + cacheFile);
 			Mame mame;
 			try (ObjectInputStream ois = new ObjectInputStream(new GZIPInputStream(Files.newInputStream(cacheFile)))) {
 				mame = (Mame) ois.readObject();

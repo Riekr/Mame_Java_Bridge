@@ -1,5 +1,6 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.attrs.AvailabilityCapable;
 import com.riekr.mame.attrs.Completable;
 import com.riekr.mame.attrs.Mergeable;
 import com.riekr.mame.tools.MameException;
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 import static com.riekr.mame.beans.enYesNo.no;
 import static com.riekr.mame.beans.enYesNo.yes;
 
-public class Machine extends MameXmlChildOf<Machines> implements Serializable, Mergeable, Completable {
+public class Machine extends MameXmlChildOf<Machines> implements Serializable, Mergeable, Completable, AvailabilityCapable {
 
 	@XmlAttribute
 	public String name;
@@ -71,8 +72,8 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 	@XmlElement(name = "softwarelist")
 	public List<MachineSoftwareList> softwareLists;
 
-	private volatile Machine                      _parentMachine;
-	private volatile Set<Machine>                 _directClones;
+	private volatile Machine _parentMachine;
+	private volatile Set<Machine> _directClones;
 	private volatile Map<String, Set<MachineRom>> _splitRomSet;
 	private volatile Map<String, Set<MachineRom>> _mergedRomSet;
 
@@ -272,5 +273,15 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 	@Override
 	public boolean isComplete(boolean invalidateCache) {
 		return components().allMatch(machineComponent -> machineComponent.isAvailable(invalidateCache));
+	}
+
+	@Override
+	public boolean isAvailable(boolean invalidateCache) {
+		return roms().anyMatch(rom -> rom.isAvailable(invalidateCache));
+	}
+
+	@NotNull
+	public enMachineHeritage getHeritage() {
+		return getParentMachine() == null ? enMachineHeritage.PARENT : enMachineHeritage.CLONE;
 	}
 }

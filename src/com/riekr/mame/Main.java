@@ -17,7 +17,7 @@ public class Main {
 	}
 
 	@CommandLine.Command(name = "m", aliases = "machines", description = "Machines operations", subcommands = {
-			M_List.class, M_Containers.class, M_Clones.class, M_Missing.class
+			M_List.class, M_Containers.class, M_Clones.class, M_Missing.class, M_Available.class
 	})
 	static class M extends CLIUtils.UsageHelp {
 		public static void main(String... args) {

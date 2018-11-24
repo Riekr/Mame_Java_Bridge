@@ -1,27 +1,36 @@
 package com.riekr.mame.callables;
 
 import com.riekr.mame.beans.Machine;
-import com.riekr.mame.mixins.MachinesOptions;
+import com.riekr.mame.mixins.MachinesFilters;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @CommandLine.Command(name = "list", description = "Lists all mame machines")
-public class M_List implements Runnable {
+public class M_List extends BaseSupplier<Stream<Machine>> implements Runnable {
 
 	@CommandLine.Mixin
-	public @NotNull MachinesOptions machinesOptions = new MachinesOptions();
+	public @NotNull MachinesFilters machinesFilters = new MachinesFilters();
+
+	public M_List(@NotNull Supplier<Mame> mame) {
+		super(mame);
+	}
+
+	@Override
+	public Stream<Machine> get() {
+		return _mame.get().machines()
+				.filter(machinesFilters);
+	}
 
 	@Override
 	public void run() {
-		Stream<Machine> s = Mame.getInstance().machines();
-		s = machinesOptions.filter(s);
 		AtomicInteger count = new AtomicInteger();
-		s.forEach(m -> {
+		get().forEach(m -> {
 			System.out.println(m);
 			count.getAndIncrement();
 		});
@@ -30,7 +39,7 @@ public class M_List implements Runnable {
 
 	public static void main(String... args) {
 		try {
-			CLIUtils.doMain(new M_List(), args);
+			CLIUtils.doMain(new M_List(Mame::getInstance), args);
 		} catch (Throwable e) {
 			e.printStackTrace(System.err);
 			System.exit(1);

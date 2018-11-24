@@ -3,7 +3,7 @@ package com.riekr.mame.callables;
 import com.riekr.mame.beans.Machine;
 import com.riekr.mame.beans.MachineComponent;
 import com.riekr.mame.beans.enMachineComponentType;
-import com.riekr.mame.mixins.MachinesOptions;
+import com.riekr.mame.mixins.MachinesFilters;
 import com.riekr.mame.mixins.ParallelOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
@@ -15,10 +15,11 @@ import java.io.PrintStream;
 import java.nio.file.Path;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 @CommandLine.Command(name = "missing", description = "Lists all completely missing machines")
-public class M_Missing implements Runnable {
+public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable {
 
 	@CommandLine.Parameters(arity = "0..")
 	public Set<String> names;
@@ -27,7 +28,7 @@ public class M_Missing implements Runnable {
 	public Path out;
 
 	@CommandLine.Mixin
-	public @NotNull MachinesOptions machinesOptions = new MachinesOptions();
+	public @NotNull MachinesFilters machinesFilters = new MachinesFilters();
 
 	@CommandLine.Mixin
 	public @NotNull ParallelOptions parallelOptions = new ParallelOptions();
@@ -35,18 +36,31 @@ public class M_Missing implements Runnable {
 	@CommandLine.Option(names = "--component-type", description = "Limit missing file search to component type")
 	public @NotNull enMachineComponentType componentType = enMachineComponentType.ROM;
 
+	public M_Missing(@NotNull Supplier<Mame> mame) {
+		super(mame);
+	}
+
+	private boolean machineName(Machine m) {
+		return names == null || names.isEmpty() || names.contains(m.name);
+	}
+
+	private boolean missesAnyComponent(Machine m) {
+		return componentType.streamFrom(m).anyMatch(MachineComponent::isNotAvailable);
+	}
+
+	@Override
+	public Stream<Machine> get() {
+		return parallelOptions.parallelize(_mame.get().machines())
+				.filter(this::machineName)
+				.filter(machinesFilters)
+				.filter(this::missesAnyComponent);
+	}
+
 	@Override
 	public void run() {
-		Stream<Machine> machines = Mame.getInstance().machines();
-		if (names != null && !names.isEmpty())
-			machines = machines.filter(m -> names.contains(m.name));
-		machines = machinesOptions.filter(machines);
-		machines = parallelOptions.parallelize(machines);
-		machines = machines.filter(machine
-				-> componentType.streamFrom(machine).anyMatch(MachineComponent::isNotAvailable));
 		AtomicInteger count = new AtomicInteger();
 		PrintStream ps = PrintStreamTee.to(out);
-		machines.forEach(m -> {
+		get().forEach(m -> {
 			count.incrementAndGet();
 			ps.println(m);
 		});
@@ -55,7 +69,7 @@ public class M_Missing implements Runnable {
 
 	public static void main(String... args) {
 		try {
-			CLIUtils.doMain(new M_Missing(), args);
+			CLIUtils.doMain(new M_Missing(Mame::getInstance), args);
 		} catch (Throwable e) {
 			e.printStackTrace(System.err);
 			System.exit(1);

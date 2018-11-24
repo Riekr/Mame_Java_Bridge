@@ -45,7 +45,7 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 			for (Path file : files) {
 				FileInfo info = cc.getFileInfo(file);
 				if (info.sha1 == null) {
-					System.out.println("Calculating sha1 of " + file);
+					System.out.println("Calculating sha1 of " + file.normalize());
 					info.sha1 = mame.sha1(file);
 					cc.notifyCachedDataChanged();
 					if (!info.sha1.equalsIgnoreCase(expectedSha1)) {
@@ -61,8 +61,8 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 	}
 
 
-	private                    Map<Path, FileInfo> _containersInfo;
-	private transient volatile Set<Path>           _containers;
+	private Map<Path, FileInfo> _containersInfo;
+	private transient volatile Set<Path> _containers;
 
 	@NotNull
 	protected abstract Set<Path> getAvailableContainersImpl(boolean invalidateCache);

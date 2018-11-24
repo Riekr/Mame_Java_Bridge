@@ -8,4 +8,11 @@ public interface Completable {
 
 	boolean isComplete(boolean invalidateCache);
 
+	default boolean isNotComplete() {
+		return !isComplete(false);
+	}
+
+	default boolean isNotComplete(boolean invalidateCache) {
+		return !isComplete(invalidateCache);
+	}
 }

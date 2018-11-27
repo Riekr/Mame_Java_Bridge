@@ -33,6 +33,10 @@ public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements
 		return files;
 	}
 
+	@Override
+	public boolean knownDumpExists() {
+		return true;
+	}
 
 	@NotNull
 	public Software getSoftware() {

@@ -50,4 +50,9 @@ public class MachineSample extends MachineComponent implements Serializable {
 		} while (machine != null);
 		return res;
 	}
+
+	@Override
+	public boolean knownDumpExists() {
+		return true;
+	}
 }

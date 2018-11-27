@@ -54,7 +54,7 @@ public final class SerUtils {
 		final int sz = in.readInt();
 		if (sz < 0)
 			return null;
-		HashSet<Path> res = new HashSet<>(sz);
+		Set<Path> res = new LinkedHashSet<>(sz);
 		for (int i = 0; i < sz; i++)
 			res.add(readPath(in));
 		return res;

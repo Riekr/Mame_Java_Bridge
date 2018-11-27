@@ -1,13 +1,12 @@
 package com.riekr.mame.callables;
 
-import com.riekr.mame.beans.Machine;
-import com.riekr.mame.beans.MachineComponent;
-import com.riekr.mame.beans.enMachineComponentType;
+import com.riekr.mame.beans.*;
 import com.riekr.mame.mixins.MachinesFilters;
 import com.riekr.mame.mixins.ParallelOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
 import com.riekr.mame.utils.PrintStreamTee;
+import com.riekr.mame.utils.ZipUtils;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
@@ -28,7 +27,11 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 	public Path out;
 
 	@CommandLine.Mixin
-	public @NotNull MachinesFilters machinesFilters = new MachinesFilters();
+	public @NotNull MachinesFilters machinesFilters = new MachinesFilters() {{
+		device = enYesNo.no;
+		bios = enYesNo.no;
+		mechanical = enYesNo.no;
+	}};
 
 	@CommandLine.Mixin
 	public @NotNull ParallelOptions parallelOptions = new ParallelOptions();
@@ -45,7 +48,9 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 	}
 
 	private boolean missesAnyComponent(Machine m) {
-		return componentType.streamFrom(m).anyMatch(MachineComponent::isNotAvailable);
+		return componentType.streamFrom(m)
+				.filter(MachineComponent::knownDumpExists)
+				.anyMatch(MachineComponent::isNotAvailable);
 	}
 
 	@Override
@@ -65,6 +70,7 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 			ps.println(m);
 		});
 		System.out.println("Found " + count + " missing roms.");
+		ZipUtils.cleanCaches();
 	}
 
 	public static void main(String... args) {

@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 
 public abstract class ContainersCapable<ParentType extends Serializable> extends MameXmlChildOf<ParentType> implements AvailabilityCapable {
 
+	public static boolean STOP_ON_FIRST_AVAILABLE = false;
+
 	public static <T extends ContainersCapable> Stream<Container<T>> unfold(@NotNull T containerCapable) {
 		return unfold(containerCapable, false);
 	}
@@ -115,4 +117,6 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 	private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
 		_containersInfo = SerUtils.readPathMap(in);
 	}
+
+	public abstract boolean knownDumpExists();
 }

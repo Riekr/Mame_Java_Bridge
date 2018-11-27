@@ -13,12 +13,13 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
 public final class CacheFileManager extends Thread {
 
-	private static volatile Map<Path, Mame>  _WRITES   = null;
-	private static volatile Set<Path>        _REMOVALS = null;
-	private static volatile CacheFileManager _MANAGER  = null;
+	private static volatile Map<Path, Mame> _WRITES = null;
+	private static volatile Set<Path> _REMOVALS = null;
+	private static volatile CacheFileManager _MANAGER = null;
 
 	public static void register(Path cacheFile, Mame mame) {
 		if (_WRITES == null) {
@@ -57,7 +58,7 @@ public final class CacheFileManager extends Thread {
 		System.out.println("Writing cache to " + path);
 		try {
 			Files.createDirectories(path.getParent());
-			try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(Files.newOutputStream(path, CREATE)))) {
+			try (ObjectOutputStream oos = new ObjectOutputStream(new GZIPOutputStream(Files.newOutputStream(path, CREATE, TRUNCATE_EXISTING)))) {
 				oos.writeObject(mame);
 			}
 		} catch (Exception e) {

@@ -63,6 +63,11 @@ public class MachineDisk extends MachineComponent implements Serializable, Valid
 	}
 
 	@Override
+	public boolean knownDumpExists() {
+		return status == enDumpStatus.good;
+	}
+
+	@Override
 	public boolean isValid(boolean invalidateCache) {
 		return validateSha1(this, invalidateCache, sha1);
 	}

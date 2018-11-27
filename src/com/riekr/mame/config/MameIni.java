@@ -8,10 +8,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -49,10 +46,10 @@ class MameIni {
 	@NotNull
 	private Set<Path> toPath(@Nullable Path basedir, @NotNull String key) {
 		Path homepath = getHomePath(basedir);
-		Set<Path> res = new HashSet<>();
+		Set<Path> res = new LinkedHashSet<>();
 		Pattern.compile("[;:]").splitAsStream(_config.get(key))
 				.forEach(rompath -> {
-					Path rompathFile = homepath.resolve(rompath);
+					Path rompathFile = homepath.resolve(rompath).normalize();
 					if (Files.isDirectory(rompathFile))
 						res.add(rompathFile);
 					else

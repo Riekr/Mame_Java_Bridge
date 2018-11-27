@@ -2,14 +2,14 @@ package com.riekr.mame.beans;
 
 import com.riekr.mame.attrs.Validable;
 import com.riekr.mame.tools.Mame;
+import com.riekr.mame.utils.ZipUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -49,29 +49,32 @@ public class MachineRom extends MachineComponent implements Serializable, Valida
 	protected @NotNull Set<Path> getAvailableContainersImpl(boolean invalidateCache) {
 		Machine machine = getParentNode();
 		Mame mame = getMame();
-		Set<Path> res = new HashSet<>();
+		Set<Path> res = null;
 		do {
 			for (Path romPath : mame.getRomPath()) {
 				Path machineZipFile = romPath.resolve(machine.name + ".zip");
-				if (Files.exists(machineZipFile)) {
-					try (FileSystem machineZip = FileSystems.newFileSystem(machineZipFile, null)) {
-						if (Files.exists(machineZip.getPath(name)))
-							res.add(machineZipFile);
-					} catch (Exception e) {
-						System.err.println("Unable to open " + machineZipFile);
-						e.printStackTrace(System.err);
-					}
+				if (ZipUtils.contains(machineZipFile, name)) {
+					if (STOP_ON_FIRST_AVAILABLE)
+						return Collections.singleton(machineZipFile);
+					(res == null ? res = new HashSet<>() : res).add(machineZipFile);
 				}
 				Path machineDir = romPath.resolve(machine.name);
 				if (Files.isDirectory(machineDir)) {
-					Path rom = machineDir.resolve(name);
-					if (Files.exists(rom))
-						res.add(machineDir);
+					if (Files.exists(machineDir.resolve(name))) {
+						if (STOP_ON_FIRST_AVAILABLE)
+							return Collections.singleton(machineZipFile);
+						(res == null ? res = new HashSet<>() : res).add(machineDir);
+					}
 				}
 			}
 			machine = machine.getParentMachine();
 		} while (machine != null);
-		return res;
+		return res == null ? Collections.emptySet() : res;
+	}
+
+	@Override
+	public boolean knownDumpExists() {
+		return status == enDumpStatus.good;
 	}
 
 	@Override

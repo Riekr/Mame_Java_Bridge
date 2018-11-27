@@ -9,7 +9,8 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static java.nio.file.StandardOpenOption.CREATE_NEW;
+import static java.nio.file.StandardOpenOption.CREATE;
+import static java.nio.file.StandardOpenOption.TRUNCATE_EXISTING;
 
 public class PrintStreamTee extends PrintStream {
 
@@ -17,7 +18,7 @@ public class PrintStreamTee extends PrintStream {
 		if (f == null)
 			return System.out;
 		try {
-			PrintStreamTee tee = new PrintStreamTee(new BufferedOutputStream(Files.newOutputStream(f, CREATE_NEW)));
+			PrintStreamTee tee = new PrintStreamTee(new BufferedOutputStream(Files.newOutputStream(f, CREATE, TRUNCATE_EXISTING)));
 			Runtime.getRuntime().addShutdownHook(new Thread(() -> {
 				tee.flush();
 				tee.close();

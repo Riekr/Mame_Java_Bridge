@@ -33,6 +33,9 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 		mechanical = enYesNo.no;
 	}};
 
+	@CommandLine.Option(names = "--runnable", description = "Filter by machine runnable status (${COMPLETION-CANDIDATES})")
+	public enYesNo runnable;
+
 	@CommandLine.Mixin
 	public @NotNull ParallelOptions parallelOptions = new ParallelOptions();
 
@@ -47,6 +50,10 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 		return names == null || names.isEmpty() || names.contains(m.name);
 	}
 
+	private boolean machineRunnable(Machine m) {
+		return runnable == null || m.runnable == runnable;
+	}
+
 	private boolean missesAnyComponent(Machine m) {
 		return componentType.streamFrom(m)
 				.filter(MachineComponent::knownDumpExists)
@@ -58,6 +65,7 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 		return parallelOptions.parallelize(_mame.get().machines())
 				.filter(this::machineName)
 				.filter(machinesFilters)
+				.filter(this::machineRunnable)
 				.filter(this::missesAnyComponent);
 	}
 

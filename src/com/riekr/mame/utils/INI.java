@@ -41,7 +41,7 @@ public final class INI {
 			Config config = field.getAnnotation(Config.class);
 			if (config == null)
 				continue;
-			fieldMap.put(field.getName(), field);
+			fieldMap.put(field.getName().toLowerCase(), field);
 			for (String key : config.value()) {
 				if (fieldMap.put(key.toLowerCase(), field) != null)
 					throw new MameException("Duplicate INI key '" + key + "' in " + file);

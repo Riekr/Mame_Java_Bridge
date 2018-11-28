@@ -1,0 +1,3 @@
+machines-xml    sandbox/mame0203.xml.gz
+rompath         sandbox/roms
+cache-home      sandbox

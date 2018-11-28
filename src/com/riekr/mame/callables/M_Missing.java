@@ -6,7 +6,7 @@ import com.riekr.mame.mixins.ParallelOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
 import com.riekr.mame.utils.PrintStreamTee;
-import com.riekr.mame.utils.ZipUtils;
+import com.riekr.mame.utils.FSUtils;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
@@ -70,7 +70,7 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 			ps.println(m);
 		});
 		System.out.println("Found " + count + " missing roms.");
-		ZipUtils.cleanCaches();
+		FSUtils.cleanCaches();
 	}
 
 	public static void main(String... args) {

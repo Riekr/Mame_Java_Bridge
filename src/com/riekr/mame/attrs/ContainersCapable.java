@@ -16,6 +16,8 @@ import java.util.stream.Stream;
 
 public abstract class ContainersCapable<ParentType extends Serializable> extends MameXmlChildOf<ParentType> implements AvailabilityCapable {
 
+	// TODO to be converted as parameter
+	@Deprecated(forRemoval = true)
 	public static boolean STOP_ON_FIRST_AVAILABLE = false;
 
 	public static <T extends ContainersCapable> Stream<Container<T>> unfold(@NotNull T containerCapable) {
@@ -63,8 +65,8 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 	}
 
 
-	private Map<Path, FileInfo> _containersInfo;
-	private transient volatile Set<Path> _containers;
+	private                    Map<Path, FileInfo> _containersInfo;
+	private transient volatile Set<Path>           _containers;
 
 	@NotNull
 	protected abstract Set<Path> getAvailableContainersImpl(boolean invalidateCache);

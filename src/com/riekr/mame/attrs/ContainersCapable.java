@@ -65,15 +65,15 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 	}
 
 
-	private                    Map<Path, FileInfo> _containersInfo;
-	private transient volatile Set<Path>           _containers;
+	private volatile Map<Path, FileInfo> _containersInfo;
+	private transient volatile Set<Path> _containers;
 
 	@NotNull
 	protected abstract Set<Path> getAvailableContainersImpl(boolean invalidateCache);
 
 	@NotNull
 	protected FileInfo getFileInfo(@NotNull Path path) {
-		Sync.condInit(this, () -> _containersInfo == null, ()
+		Sync.dcInit(this, () -> _containersInfo == null, ()
 				-> _containersInfo = Collections.synchronizedMap(new HashMap<>()));
 		FileInfo res = _containersInfo.computeIfAbsent(path, k -> {
 			notifyCachedDataChanged();
@@ -90,7 +90,7 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 	}
 
 	public final Set<Path> getAvailableContainers(boolean invalidateCache) {
-		Sync.condInit(this, () -> _containers == null || invalidateCache, () -> {
+		Sync.dcInit(this, () -> _containers == null || invalidateCache, () -> {
 			_containers = Collections.unmodifiableSet(getAvailableContainersImpl(invalidateCache));
 			if (_containersInfo != null && _containersInfo.keySet().retainAll(_containers))
 				notifyCachedDataChanged();

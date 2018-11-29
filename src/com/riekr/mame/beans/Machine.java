@@ -119,7 +119,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 
 	@NotNull
 	public Stream<Machine> directClones() {
-		Sync.condInit(this, () -> _directClones == null, () -> {
+		Sync.dcInit(this, () -> _directClones == null, () -> {
 			_directClones = new HashSet<>();
 			getParentNode().machines()
 					.filter(m -> name.equals(m.cloneof))
@@ -141,7 +141,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 	public Machine getParentMachine() {
 		if (cloneof == null)
 			return null;
-		Sync.condInit(this, () -> _parentMachine == null, () -> {
+		Sync.dcInit(this, () -> _parentMachine == null, () -> {
 			Machines machines = getParentNode();
 			List<Machine> res = machines.machines()
 					.filter(m -> cloneof.equals(m.name))
@@ -162,7 +162,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 
 	@NotNull
 	public Map<String, Set<MachineRom>> getSplitRomSet() {
-		Sync.condInit(this, () -> _splitRomSet == null, () -> {
+		Sync.dcInit(this, () -> _splitRomSet == null, () -> {
 			_splitRomSet = new LinkedHashMap<>();
 			Machine machine = this;
 			do {
@@ -178,7 +178,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 
 	@NotNull
 	public Map<String, Set<MachineRom>> getMergedRomSet() {
-		Sync.condInit(this, () -> _mergedRomSet == null, () -> {
+		Sync.dcInit(this, () -> _mergedRomSet == null, () -> {
 			Machine parent = getParentMachine();
 			if (parent != null) {
 				_mergedRomSet = parent.getMergedRomSet();

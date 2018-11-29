@@ -28,7 +28,7 @@ class MameXmlSourceRef extends XmlSourceRef {
 
 	@NotNull
 	private String getCurrentVersion() {
-		Sync.condInit(this, () -> _currentVersion == null, () -> {
+		Sync.dcInit(this, () -> _currentVersion == null, () -> {
 			_currentVersion = "<undef>";
 			try {
 				System.out.println("Getting mame version from " + _file);

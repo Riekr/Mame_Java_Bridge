@@ -6,7 +6,7 @@ import java.util.function.BooleanSupplier;
 
 public class Sync {
 
-	public static void condInit(@NotNull Object sync, @NotNull BooleanSupplier cond, @NotNull Runnable init) {
+	public static void dcInit(@NotNull Object sync, @NotNull BooleanSupplier cond, @NotNull Runnable init) {
 		if (cond.getAsBoolean()) {
 			//noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (sync) {

@@ -68,7 +68,7 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 
 	@NotNull
 	public Set<Path> getRoots(boolean invalidateCache) {
-		Sync.condInit(this, () -> _roots == null || invalidateCache, () -> {
+		Sync.dcInit(this, () -> _roots == null || invalidateCache, () -> {
 			_roots = new HashSet<>();
 			for (Path slRoot : getParentNode().getRoots(invalidateCache)) {
 				Path candidate = slRoot.resolve(name);
@@ -83,7 +83,7 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 	public Software getParent() {
 		if (!isClone())
 			return null;
-		Sync.condInit(this, () -> _parent == null, () -> {
+		Sync.dcInit(this, () -> _parent == null, () -> {
 			SoftwareList sl = getParentNode();
 			Optional<Software> parent = sl.softwares().filter(s -> s.name.equals(cloneof)).findFirst();
 			if (parent.isPresent()) {

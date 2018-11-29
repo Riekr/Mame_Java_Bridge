@@ -22,15 +22,11 @@ public final class CacheFileManager extends Thread {
 	private static volatile CacheFileManager _MANAGER = null;
 
 	public static void register(Path cacheFile, Mame mame) {
-		if (_WRITES == null) {
-			synchronized (CacheFileManager.class) {
-				if (_WRITES == null) {
-					_WRITES = Collections.synchronizedMap(new HashMap<>());
-					if (_MANAGER == null)
-						Runtime.getRuntime().addShutdownHook(_MANAGER = new CacheFileManager());
-				}
-			}
-		}
+		Sync.dcInit(CacheFileManager.class, () -> _WRITES == null, () -> {
+			_WRITES = Collections.synchronizedMap(new HashMap<>());
+			if (_MANAGER == null)
+				Runtime.getRuntime().addShutdownHook(_MANAGER = new CacheFileManager());
+		});
 		Mame oldMame = _WRITES.put(cacheFile, mame);
 		if (oldMame != null && oldMame != mame) {
 			_WRITES.put(cacheFile, oldMame);
@@ -39,15 +35,11 @@ public final class CacheFileManager extends Thread {
 	}
 
 	public static void invalidate(Path cacheFile) {
-		if (_REMOVALS == null) {
-			synchronized (CacheFileManager.class) {
-				if (_REMOVALS == null) {
-					_REMOVALS = Collections.synchronizedSet(new HashSet<>());
-					if (_MANAGER == null)
-						Runtime.getRuntime().addShutdownHook(_MANAGER = new CacheFileManager());
-				}
-			}
-		}
+		Sync.dcInit(CacheFileManager.class, () -> _REMOVALS == null, () -> {
+			_REMOVALS = Collections.synchronizedSet(new HashSet<>());
+			if (_MANAGER == null)
+				Runtime.getRuntime().addShutdownHook(_MANAGER = new CacheFileManager());
+		});
 		_REMOVALS.add(cacheFile);
 	}
 

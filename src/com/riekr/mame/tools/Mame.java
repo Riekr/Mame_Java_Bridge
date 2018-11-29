@@ -25,7 +25,7 @@ public class Mame implements Serializable {
 	private static      Mame          _DEFAULT_INSTANCE;
 
 	public static Mame getInstance() {
-		Sync.condInit(Mame.class, () -> _DEFAULT_INSTANCE == null,
+		Sync.dcInit(Mame.class, () -> _DEFAULT_INSTANCE == null,
 				() -> _DEFAULT_INSTANCE = newInstance(DEFAULT_CONFIG_FACTORY));
 		return _DEFAULT_INSTANCE;
 	}
@@ -79,7 +79,7 @@ public class Mame implements Serializable {
 			System.err.println("w: software lists not available.");
 			return Stream.empty();
 		}
-		Sync.condInit(this, () -> _softwareLists == null || _config.softwaresXmlRef.isOutDated(), () -> {
+		Sync.dcInit(this, () -> _softwareLists == null || _config.softwaresXmlRef.isOutDated(), () -> {
 			try {
 				try (InputStream is = _config.softwaresXmlRef.newInputStream(XmlSourceRef.Type.SOFTWARES)) {
 					System.out.println("Parsing software lists...");
@@ -102,7 +102,7 @@ public class Mame implements Serializable {
 			System.err.println("w: machines not available.");
 			return Stream.empty();
 		}
-		Sync.condInit(this, () -> _machines == null || _config.machinesXmlRef.isOutDated(), () -> {
+		Sync.dcInit(this, () -> _machines == null || _config.machinesXmlRef.isOutDated(), () -> {
 			try {
 				try (InputStream is = _config.machinesXmlRef.newInputStream(XmlSourceRef.Type.MACHINES)) {
 					System.out.println("Parsing machines...");

@@ -45,7 +45,7 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 
 	@NotNull
 	public Set<Path> getRoots(boolean invalidateCache) {
-		Sync.condInit(this, () -> _roots == null || invalidateCache, () -> {
+		Sync.dcInit(this, () -> _roots == null || invalidateCache, () -> {
 			_roots = new HashSet<>();
 			for (Path romPath : Mame.getInstance().getRomPath()) {
 				Path candidate = romPath.resolve(name);

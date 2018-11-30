@@ -42,7 +42,6 @@ public final class CLIUtils {
 				cl.addMixin(instance.getClass().getSimpleName(), instance);
 			}
 			Mame.DEFAULT_CONFIG_FACTORY.configFile = Path.of("config.local");
-			ContainersCapable.STOP_ON_FIRST_AVAILABLE = true;
 			cl.addMixin("MameConfig", Mame.DEFAULT_CONFIG_FACTORY);
 			cl.setResourceBundle(ResourceBundle.getBundle("com.riekr.mame.callables.cmdline"));
 			try {

@@ -44,7 +44,7 @@ public class MachineDisk extends MachineComponent implements Serializable, Valid
 	}
 
 	@Override
-	protected @NotNull Set<Path> getAvailableContainersImpl(boolean invalidateCache) {
+	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
 		Machine machine = getParentNode();
 		Mame mame = getMame();
 		Set<Path> res = null;
@@ -52,9 +52,10 @@ public class MachineDisk extends MachineComponent implements Serializable, Valid
 			for (Path romPath : mame.getRomPath()) {
 				Path machineDir = romPath.resolve(machine.name);
 				if (FSUtils.contains(machineDir, name, invalidateCache)) {
-					if (STOP_ON_FIRST_AVAILABLE)
+					if (complete)
+						(res == null ? res = new HashSet<>() : res).add(machineDir);
+					else
 						return Collections.singleton(machineDir);
-					(res == null ? res = new HashSet<>() : res).add(machineDir);
 				}
 			}
 			// TODO can chds be merged? if not so remove parent loop
@@ -70,6 +71,6 @@ public class MachineDisk extends MachineComponent implements Serializable, Valid
 
 	@Override
 	public boolean isValid(boolean invalidateCache) {
-		return validateSha1(this, invalidateCache, sha1);
+		return validateSha1(invalidateCache, sha1);
 	}
 }

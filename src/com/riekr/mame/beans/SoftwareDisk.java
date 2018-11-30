@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,14 +24,18 @@ public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements
 	public String writeable;
 
 	@Override
-	protected @NotNull Set<Path> getAvailableContainersImpl(boolean invalidateCache) {
-		Set<Path> files = new HashSet<>();
+	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
+		Set<Path> files = null;
 		for (Path sRoot : getSoftware().getRoots(invalidateCache)) {
 			Path candidate = sRoot.resolve(name + ".chd");
-			if (Files.isReadable(candidate))
-				files.add(candidate);
+			if (Files.isReadable(candidate)) {
+				if (complete)
+					(files == null ? files = new HashSet<>() : files).add(candidate);
+				else
+					return Collections.singleton(candidate);
+			}
 		}
-		return files;
+		return files == null ? Collections.emptySet() : files;
 	}
 
 	@Override
@@ -45,6 +50,6 @@ public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements
 
 	@Override
 	public boolean isValid(boolean invalidateCache) {
-		return validateSha1(this, invalidateCache, sha1);
+		return validateSha1(invalidateCache, sha1);
 	}
 }

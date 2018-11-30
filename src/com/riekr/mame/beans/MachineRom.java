@@ -45,7 +45,7 @@ public class MachineRom extends MachineComponent implements Serializable, Valida
 	public enYesNo optional = enYesNo.no;
 
 	@Override
-	protected @NotNull Set<Path> getAvailableContainersImpl(boolean invalidateCache) {
+	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
 		Machine machine = getParentNode();
 		Mame mame = getMame();
 		Set<Path> res = null;
@@ -53,15 +53,17 @@ public class MachineRom extends MachineComponent implements Serializable, Valida
 			for (Path romPath : mame.getRomPath()) {
 				Path machineZipFile = romPath.resolve(machine.name + ".zip");
 				if (FSUtils.contains(machineZipFile, name, invalidateCache)) {
-					if (STOP_ON_FIRST_AVAILABLE)
+					if (complete)
+						(res == null ? res = new HashSet<>() : res).add(machineZipFile);
+					else
 						return Collections.singleton(machineZipFile);
-					(res == null ? res = new HashSet<>() : res).add(machineZipFile);
 				}
 				Path machineDir = romPath.resolve(machine.name);
 				if (FSUtils.contains(machineDir, name, invalidateCache)) {
-					if (STOP_ON_FIRST_AVAILABLE)
+					if (complete)
+						(res == null ? res = new HashSet<>() : res).add(machineDir);
+					else
 						return Collections.singleton(machineDir);
-					(res == null ? res = new HashSet<>() : res).add(machineDir);
 				}
 			}
 			machine = machine.getParentMachine();
@@ -86,6 +88,6 @@ public class MachineRom extends MachineComponent implements Serializable, Valida
 
 	@Override
 	public boolean isValid(boolean invalidateCache) {
-		return validateSha1(this, invalidateCache, sha1);
+		return validateSha1(invalidateCache, sha1);
 	}
 }

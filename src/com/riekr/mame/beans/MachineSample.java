@@ -22,7 +22,7 @@ public class MachineSample extends MachineComponent implements Serializable {
 	}
 
 	@Override
-	protected @NotNull Set<Path> getAvailableContainersImpl(boolean invalidateCache) {
+	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
 		Machine machine = getParentNode();
 		Mame mame = getMame();
 		Set<Path> res = null;
@@ -30,15 +30,17 @@ public class MachineSample extends MachineComponent implements Serializable {
 			for (Path samplesPath : mame.getSamplePath()) {
 				Path samplesZipFile = samplesPath.resolve(machine.name + ".zip");
 				if (FSUtils.contains(samplesZipFile, name, invalidateCache)) {
-					if (STOP_ON_FIRST_AVAILABLE)
+					if (complete)
+						(res == null ? res = new HashSet<>() : res).add(samplesZipFile);
+					else
 						return Collections.singleton(samplesZipFile);
-					(res == null ? res = new HashSet<>() : res).add(samplesZipFile);
 				}
 				Path samplesDir = samplesPath.resolve(machine.name);
 				if (FSUtils.contains(samplesDir, name, invalidateCache)) {
-					if (STOP_ON_FIRST_AVAILABLE)
+					if (complete)
+						(res == null ? res = new HashSet<>() : res).add(samplesDir);
+					else
 						return Collections.singleton(samplesDir);
-					(res == null ? res = new HashSet<>() : res).add(samplesDir);
 				}
 			}
 			machine = machine.getParentMachine();

@@ -110,14 +110,6 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 	}
 
 	@NotNull
-	public Machine getRootMachine() {
-		Machine parent = getParentMachine();
-		if (parent == null)
-			return this;
-		return parent.getRootMachine();
-	}
-
-	@NotNull
 	public Stream<Machine> directClones() {
 		Sync.dcInit(this, () -> _directClones == null, () -> {
 			_directClones = new HashSet<>();
@@ -137,6 +129,14 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 		return res;
 	}
 
+	@NotNull
+	public Machine getRootMachine() {
+		Machine parent = getParentMachine();
+		if (parent == null)
+			return this;
+		return parent.getRootMachine();
+	}
+
 	@Nullable
 	public Machine getParentMachine() {
 		if (cloneof == null)
@@ -148,7 +148,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 					.collect(Collectors.toList());
 			switch (res.size()) {
 				case 0:
-					throw new MameException("No parent of " + name + " found");
+					throw new MameException("Parent of " + name + " not found (" + cloneof + ')');
 				case 1:
 					_parentMachine = res.get(0);
 					notifyCachedDataChanged();

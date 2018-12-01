@@ -8,12 +8,13 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.List;
+import java.util.stream.Stream;
 
 @XmlRootElement(name = "softwarelists")
 public class SoftwareLists extends MameXmlChildOf<Mame> implements Serializable {
 
 	@XmlElement(name = "softwarelist")
-	public List<SoftwareList> lists;
+	private List<SoftwareList> _lists;
 
 	// TODO add mameconfig version and check it
 	// TODO check SoftwareLists schema
@@ -21,14 +22,18 @@ public class SoftwareLists extends MameXmlChildOf<Mame> implements Serializable 
 	@Override
 	public void setParentNode(@NotNull Mame parentNode) {
 		super.setParentNode(parentNode);
-		if (lists != null) {
-			for (SoftwareList sl : lists)
+		if (_lists != null) {
+			for (SoftwareList sl : _lists)
 				sl.setParentNode(this);
 		}
 	}
 
-	@Override
-	public String toString() {
-		return String.valueOf(lists);
+	public int count() {
+		return _lists == null ? 0 : _lists.size();
+	}
+
+	@NotNull
+	public Stream<SoftwareList> lists() {
+		return _lists == null ? Stream.empty() : _lists.stream();
 	}
 }

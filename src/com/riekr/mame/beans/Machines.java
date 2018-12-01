@@ -16,19 +16,23 @@ public class Machines extends MameXmlChildOf<Mame> implements Serializable {
 	public int mameconfig; // TODO check mameconfig version change
 
 	@XmlElement(name = "machine")
-	public List<Machine> machines;
+	private List<Machine> _machines;
 
 	@Override
 	public void setParentNode(@NotNull Mame parentNode) {
 		super.setParentNode(parentNode);
-		if (machines != null) {
-			for (Machine m : machines)
+		if (_machines != null) {
+			for (Machine m : _machines)
 				m.setParentNode(this);
 		}
 	}
 
+	public int count() {
+		return _machines == null ? 0 : _machines.size();
+	}
+
 	@NotNull
 	public Stream<Machine> machines() {
-		return machines == null ? Stream.empty() : machines.stream();
+		return _machines == null ? Stream.empty() : _machines.stream();
 	}
 }

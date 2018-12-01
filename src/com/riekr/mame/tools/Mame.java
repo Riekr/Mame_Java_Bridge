@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 public class Mame implements Serializable {
 
 	public static final ConfigFactory DEFAULT_CONFIG_FACTORY = new ConfigFactory();
-	private static      Mame          _DEFAULT_INSTANCE;
+	private static Mame _DEFAULT_INSTANCE;
 
 	public static Mame getInstance() {
 		Sync.dcInit(Mame.class, () -> _DEFAULT_INSTANCE == null,
@@ -59,9 +59,9 @@ public class Mame implements Serializable {
 		_config = config;
 	}
 
-	private          MameConfig    _config;
+	private MameConfig _config;
 	private volatile SoftwareLists _softwareLists;
-	private volatile Machines      _machines;
+	private volatile Machines _machines;
 
 	@NotNull
 	public Set<Path> getRomPath() {
@@ -86,14 +86,14 @@ public class Mame implements Serializable {
 					_softwareLists = JaxbUtils.unmarshal(is, SoftwareLists.class);
 				}
 				_softwareLists.setParentNode(this);
-				System.out.println("Got " + _softwareLists.lists.size() + " software lists");
+				System.out.println("Got " + _softwareLists.count() + " software lists");
 				requestCachesWrite();
 			} catch (Exception e) {
 				System.err.println("Unable to get mame software lists");
 				e.printStackTrace(System.err);
 			}
 		});
-		return _softwareLists.lists == null ? Stream.empty() : _softwareLists.lists.stream();
+		return _softwareLists.lists();
 	}
 
 	@NotNull
@@ -109,14 +109,14 @@ public class Mame implements Serializable {
 					_machines = JaxbUtils.unmarshal(is, Machines.class);
 				}
 				_machines.setParentNode(this);
-				System.out.println("Got " + _machines.machines.size() + " machines");
+				System.out.println("Got " + _machines.count() + " machines");
 				requestCachesWrite();
 			} catch (Exception e) {
 				System.err.println("Unable to get mame machines");
 				e.printStackTrace(System.err);
 			}
 		});
-		return _machines.machines == null ? Stream.empty() : _machines.machines.stream();
+		return _machines.machines();
 	}
 
 	public String sha1(@NotNull Path file) {

@@ -29,7 +29,7 @@ public abstract class ContainersCapable<ParentType extends Serializable> extends
 
 	private volatile Map<Path, FileInfo> _containersInfo;
 	private transient volatile Set<Path> _containers;
-	private transient volatile boolean _containersAreComplete;
+	private transient boolean _containersAreComplete;
 
 	@NotNull
 	protected abstract Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache);

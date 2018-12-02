@@ -113,7 +113,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 	public Stream<Machine> directClones() {
 		Sync.dcInit(this, () -> _directClones == null, () -> {
 			_directClones = new HashSet<>();
-			getParentNode().machines()
+			getParentNode().all()
 					.filter(m -> name.equals(m.cloneof))
 					.collect(Collectors.toCollection(() -> _directClones));
 			notifyCachedDataChanged();
@@ -142,8 +142,7 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 		if (cloneof == null)
 			return null;
 		Sync.dcInit(this, () -> _parentMachine == null, () -> {
-			Machines machines = getParentNode();
-			List<Machine> res = machines.machines()
+			List<Machine> res = getParentNode().all()
 					.filter(m -> cloneof.equals(m.name))
 					.collect(Collectors.toList());
 			switch (res.size()) {

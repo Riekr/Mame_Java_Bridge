@@ -1,12 +1,14 @@
 package com.riekr.mame.callables;
 
-import com.riekr.mame.beans.*;
+import com.riekr.mame.beans.Machine;
+import com.riekr.mame.beans.MachineComponent;
+import com.riekr.mame.beans.enMachineComponentType;
+import com.riekr.mame.beans.enYesNo;
 import com.riekr.mame.mixins.MachinesFilters;
 import com.riekr.mame.mixins.ParallelOptions;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.CLIUtils;
 import com.riekr.mame.utils.PrintStreamTee;
-import com.riekr.mame.utils.FSUtils;
 import org.jetbrains.annotations.NotNull;
 import picocli.CommandLine;
 
@@ -78,7 +80,6 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 			ps.println(m);
 		});
 		System.out.println("Found " + count + " missing roms.");
-		FSUtils.cleanCaches();
 	}
 
 	public static void main(String... args) {

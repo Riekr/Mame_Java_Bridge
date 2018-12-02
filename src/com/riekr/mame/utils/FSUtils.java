@@ -16,12 +16,13 @@ public final class FSUtils {
 	private FSUtils() {
 	}
 
-	private static final LinkedHashMap<Path, Set<String>> _cache = new LinkedHashMap<>() {
+	private static final LinkedHashMap<Path, Set<String>> _CACHE = new LinkedHashMap<>() {
 		@Override
 		protected boolean removeEldestEntry(Map.Entry eldest) {
 			return size() > 1000;
 		}
 	};
+	private static final DelayableTask _CACHE_CLEANER = new DelayableTask(5000, _CACHE::clear);
 
 	public static String toDotExt(String ext) {
 		if (ext == null || ext.isBlank())
@@ -55,8 +56,8 @@ public final class FSUtils {
 
 	private static boolean contains(Path path, String name, boolean invalidateCache, Predicate<Path> exists) {
 		Set<String> names;
-		synchronized (_cache) {
-			names = _cache.get(path);
+		synchronized (_CACHE) {
+			names = _CACHE.get(path);
 			if (names == null || invalidateCache) {
 				if (exists.test(path)) {
 					final HashSet<String> res = new HashSet<>();
@@ -73,7 +74,8 @@ public final class FSUtils {
 				} else
 					names = Collections.emptySet();
 			}
-			_cache.put(path, names); // refresh cache
+			_CACHE.put(path, names); // refresh cache
+			_CACHE_CLEANER.touch();
 		}
 		return names.contains(name);
 	}
@@ -83,12 +85,6 @@ public final class FSUtils {
 			Files.list(container).forEach(f -> res.add(f.getFileName().toString()));
 		} catch (IOException e) {
 			throw new MameException("Unable to list contents of " + container, e);
-		}
-	}
-
-	public static void cleanCaches() {
-		synchronized (_cache) {
-			_cache.clear();
 		}
 	}
 }

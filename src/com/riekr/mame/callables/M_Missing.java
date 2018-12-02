@@ -1,7 +1,7 @@
 package com.riekr.mame.callables;
 
 import com.riekr.mame.beans.Machine;
-import com.riekr.mame.beans.MachineComponent;
+import com.riekr.mame.attrs.MachineComponent;
 import com.riekr.mame.beans.enMachineComponentType;
 import com.riekr.mame.beans.enYesNo;
 import com.riekr.mame.mixins.MachinesFilters;

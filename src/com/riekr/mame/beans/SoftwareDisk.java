@@ -1,6 +1,7 @@
 package com.riekr.mame.beans;
 
 import com.riekr.mame.attrs.ContainersCapable;
+import com.riekr.mame.attrs.SoftwareComponent;
 import com.riekr.mame.attrs.Validable;
 import com.riekr.mame.utils.FSUtils;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +14,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
-public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements Serializable, Validable {
+public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements Serializable, Validable, SoftwareComponent {
 
 	@XmlAttribute
 	public String name;
@@ -46,9 +47,10 @@ public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements
 		return true;
 	}
 
+	@Override
 	@NotNull
 	public Software getSoftware() {
-		return getParentNode().getParentNode().getParentNode();
+		return getParentNode().getSoftware();
 	}
 
 	@Override

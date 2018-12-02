@@ -7,12 +7,20 @@ import com.riekr.mame.beans.SoftwareLists;
 import com.riekr.mame.config.ConfigFactory;
 import com.riekr.mame.config.MameConfig;
 import com.riekr.mame.utils.CacheFileManager;
-import com.riekr.mame.utils.JaxbUtils;
 import com.riekr.mame.utils.Sha1;
 import com.riekr.mame.utils.Sync;
 import com.riekr.mame.xmlsource.XmlSourceRef;
 import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.nio.file.Path;
 import java.util.Set;
@@ -78,6 +86,18 @@ public class Mame implements Serializable {
 		return getSoftwareLists().all();
 	}
 
+	private <T> T unmarshal(InputStream is, Class<T> clazz) throws IOException, ParserConfigurationException, SAXException, JAXBException {
+		final DocumentBuilderFactory documentBuilderFactory = DocumentBuilderFactory.newInstance();
+		final DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
+		final Document document = docBuilder.parse(is);
+		final org.w3c.dom.Element varElement = document.getDocumentElement();
+		final JAXBContext context = JAXBContext.newInstance(clazz);
+		final Unmarshaller unmarshaller = context.createUnmarshaller();
+		unmarshaller.setListener(new MameXmlChildOf.UnmarshallListener(this));
+		final JAXBElement<T> loader = unmarshaller.unmarshal(varElement, clazz);
+		return loader.getValue();
+	}
+
 	@NotNull
 	public SoftwareLists getSoftwareLists() {
 		if (_config.machinesXmlRef == null)
@@ -86,9 +106,8 @@ public class Mame implements Serializable {
 			try {
 				try (InputStream is = _config.softwaresXmlRef.newInputStream(XmlSourceRef.Type.SOFTWARES)) {
 					System.out.println("Parsing software lists...");
-					_softwareLists = JaxbUtils.unmarshal(is, SoftwareLists.class);
+					_softwareLists = unmarshal(is, SoftwareLists.class);
 				}
-				_softwareLists.setParentNode(this);
 				System.out.println("Got " + _softwareLists.count() + " software lists");
 				requestCachesWrite();
 			} catch (Exception e) {
@@ -107,9 +126,8 @@ public class Mame implements Serializable {
 			try {
 				try (InputStream is = _config.machinesXmlRef.newInputStream(XmlSourceRef.Type.MACHINES)) {
 					System.out.println("Parsing machines...");
-					_machines = JaxbUtils.unmarshal(is, Machines.class);
+					_machines = unmarshal(is, Machines.class);
 				}
-				_machines.setParentNode(this);
 				System.out.println("Got " + _machines.count() + " machines");
 				requestCachesWrite();
 			} catch (Exception e) {

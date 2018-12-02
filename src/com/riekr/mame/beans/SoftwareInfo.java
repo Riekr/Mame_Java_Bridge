@@ -1,6 +1,6 @@
 package com.riekr.mame.beans;
 
-import com.riekr.mame.utils.MameXmlChildOf;
+import com.riekr.mame.tools.MameXmlChildOf;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;

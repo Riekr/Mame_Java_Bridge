@@ -2,7 +2,7 @@ package com.riekr.mame.attrs;
 
 import com.riekr.mame.beans.Container;
 import com.riekr.mame.utils.FileInfo;
-import com.riekr.mame.utils.MameXmlChildOf;
+import com.riekr.mame.tools.MameXmlChildOf;
 import com.riekr.mame.utils.SerUtils;
 import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;

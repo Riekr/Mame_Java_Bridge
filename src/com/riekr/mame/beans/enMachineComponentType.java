@@ -1,5 +1,7 @@
 package com.riekr.mame.beans;
 
+import com.riekr.mame.attrs.MachineComponent;
+
 import java.util.stream.Stream;
 
 public enum enMachineComponentType {

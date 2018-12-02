@@ -2,9 +2,10 @@ package com.riekr.mame.beans;
 
 import com.riekr.mame.attrs.AvailabilityCapable;
 import com.riekr.mame.attrs.Completable;
+import com.riekr.mame.attrs.MachineComponent;
 import com.riekr.mame.attrs.Mergeable;
 import com.riekr.mame.tools.MameException;
-import com.riekr.mame.utils.MameXmlChildOf;
+import com.riekr.mame.tools.MameXmlChildOf;
 import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -206,27 +207,6 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 	}
 
 	// TODO full merged
-
-	@Override
-	public void setParentNode(@NotNull Machines parentNode) {
-		super.setParentNode(parentNode);
-		if (_roms != null) {
-			for (MachineRom r : _roms)
-				r.setParentNode(this);
-		}
-		if (_samples != null) {
-			for (MachineSample s : _samples)
-				s.setParentNode(this);
-		}
-		if (biosSets != null) {
-			for (MachineBiosSet b : biosSets)
-				b.setParentNode(this);
-		}
-		if (_disks != null) {
-			for (MachineDisk d : _disks)
-				d.setParentNode(this);
-		}
-	}
 
 	public String getTypeDescr() {
 		StringBuilder res = new StringBuilder();

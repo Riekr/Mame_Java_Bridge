@@ -27,15 +27,6 @@ public class SoftwareList extends ContainersCapable<SoftwareLists> implements Se
 	private List<Software> _softwares;
 
 	@Override
-	public void setParentNode(@NotNull SoftwareLists parentNode) {
-		super.setParentNode(parentNode);
-		if (_softwares != null) {
-			for (Software s : _softwares)
-				s.setParentNode(this);
-		}
-	}
-
-	@Override
 	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
 		HashSet<Path> roots = null;
 		for (Path romPath : getMame().getRomPath()) {

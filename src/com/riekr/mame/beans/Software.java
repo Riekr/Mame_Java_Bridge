@@ -46,19 +46,6 @@ public class Software extends ContainersCapable<SoftwareList> implements Seriali
 
 	private volatile Software _parent;
 
-	@Override
-	public void setParentNode(@NotNull SoftwareList parentNode) {
-		super.setParentNode(parentNode);
-		if (_infos != null) {
-			for (SoftwareInfo i : _infos)
-				i.setParentNode(this);
-		}
-		if (_parts != null) {
-			for (SoftwarePart p : _parts)
-				p.setParentNode(this);
-		}
-	}
-
 	@Nullable
 	public Software getParent() {
 		if (!isClone())

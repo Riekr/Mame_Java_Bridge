@@ -19,8 +19,11 @@ public final class DelayableTask implements Runnable {
 
 	public void touch() {
 		final long t = _timeLimit.getAndSet(System.currentTimeMillis() + _delay);
-		if (t == 0L)
-			new Thread(this).start();
+		if (t == 0L) {
+			Thread thread = new Thread(this);
+			thread.setDaemon(true);
+			thread.start();
+		}
 	}
 
 	@Override

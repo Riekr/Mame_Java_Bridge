@@ -33,7 +33,7 @@ public class SoftwareLists extends MameXmlChildOf<Mame> implements Serializable 
 	}
 
 	@NotNull
-	public Stream<SoftwareList> lists() {
+	public Stream<SoftwareList> all() {
 		return _lists == null ? Stream.empty() : _lists.stream();
 	}
 }

@@ -32,7 +32,7 @@ public class Machines extends MameXmlChildOf<Mame> implements Serializable {
 	}
 
 	@NotNull
-	public Stream<Machine> machines() {
+	public Stream<Machine> all() {
 		return _machines == null ? Stream.empty() : _machines.stream();
 	}
 }

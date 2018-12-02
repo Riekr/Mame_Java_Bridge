@@ -75,10 +75,13 @@ public class Mame implements Serializable {
 
 	@NotNull
 	public Stream<SoftwareList> softwareLists() {
-		if (_config.softwaresXmlRef == null) {
-			System.err.println("w: software lists not available.");
-			return Stream.empty();
-		}
+		return getSoftwareLists().all();
+	}
+
+	@NotNull
+	public SoftwareLists getSoftwareLists() {
+		if (_config.machinesXmlRef == null)
+			throw new MameException("Software lists not available.");
 		Sync.dcInit(this, () -> _softwareLists == null || _config.softwaresXmlRef.isOutDated(), () -> {
 			try {
 				try (InputStream is = _config.softwaresXmlRef.newInputStream(XmlSourceRef.Type.SOFTWARES)) {
@@ -93,15 +96,13 @@ public class Mame implements Serializable {
 				e.printStackTrace(System.err);
 			}
 		});
-		return _softwareLists.lists();
+		return _softwareLists;
 	}
 
 	@NotNull
-	public Stream<Machine> machines() {
-		if (_config.machinesXmlRef == null) {
-			System.err.println("w: machines not available.");
-			return Stream.empty();
-		}
+	public Machines getMachines() {
+		if (_config.machinesXmlRef == null)
+			throw new MameException("Machines not available.");
 		Sync.dcInit(this, () -> _machines == null || _config.machinesXmlRef.isOutDated(), () -> {
 			try {
 				try (InputStream is = _config.machinesXmlRef.newInputStream(XmlSourceRef.Type.MACHINES)) {
@@ -116,7 +117,12 @@ public class Mame implements Serializable {
 				e.printStackTrace(System.err);
 			}
 		});
-		return _machines.machines();
+		return _machines;
+	}
+
+	@NotNull
+	public Stream<Machine> machines() {
+		return getMachines().all();
 	}
 
 	public String sha1(@NotNull Path file) {

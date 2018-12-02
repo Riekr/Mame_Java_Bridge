@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public final class FSUtils {
 
@@ -21,6 +22,30 @@ public final class FSUtils {
 			return size() > 1000;
 		}
 	};
+
+	public static String toDotExt(String ext) {
+		if (ext == null || ext.isBlank())
+			return "";
+		ext = ext.trim();
+		if (ext.charAt(0) == '.')
+			return ext;
+		return '.' + ext;
+	}
+
+	public static Stream<Path> search(Path path, String name, boolean complete, boolean invalidateCache, String... extensions) {
+		List<Path> res = null;
+		for (String ext : extensions) {
+			String currName = name + toDotExt(ext);
+			if (contains(path, currName, invalidateCache)) {
+				Path found = path.resolve(currName);
+				if (complete)
+					(res == null ? res = new ArrayList<>() : res).add(found);
+				else
+					return Stream.of(found);
+			}
+		}
+		return res == null ? Stream.empty() : res.stream();
+	}
 
 	public static boolean contains(Path path, String name, boolean invalidateCache) {
 		return contains(path, name, invalidateCache,

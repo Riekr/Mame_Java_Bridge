@@ -1,6 +1,5 @@
 package com.riekr.mame.utils;
 
-import com.riekr.mame.attrs.ContainersCapable;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.tools.MameException;
 import org.jetbrains.annotations.NotNull;

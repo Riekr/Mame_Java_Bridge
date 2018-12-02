@@ -2,11 +2,11 @@ package com.riekr.mame.beans;
 
 import com.riekr.mame.attrs.ContainersCapable;
 import com.riekr.mame.attrs.Validable;
+import com.riekr.mame.utils.FSUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import java.io.Serializable;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
@@ -28,8 +28,7 @@ public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements
 	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
 		Iterator<Path> i = getSoftware()
 				.availableContainers(complete, invalidateCache)
-				.map(sRoot -> sRoot.resolve(name + ".chd"))
-				.filter(Files::exists)
+				.flatMap(path -> FSUtils.search(path, name, complete, invalidateCache, ".chd", ".zip"))
 				.iterator();
 		if (!i.hasNext())
 			return Collections.emptySet();

@@ -5,6 +5,7 @@ import com.riekr.mame.attrs.Completable;
 import com.riekr.mame.attrs.ContainersCapable;
 import com.riekr.mame.attrs.Mergeable;
 import com.riekr.mame.tools.MameException;
+import com.riekr.mame.utils.FSUtils;
 import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -81,8 +82,7 @@ public class Software extends ContainersCapable<SoftwareList> implements Seriali
 	@Override
 	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
 		Iterator<Path> i = getParentNode().availableContainers(complete, invalidateCache)
-				.map(slRoot -> slRoot.resolve(name))
-				.filter(candidate -> Files.isDirectory(candidate))
+				.flatMap(slRoot -> FSUtils.search(slRoot, name, complete, invalidateCache, ""))
 				.iterator();
 		if (!i.hasNext())
 			return Collections.emptySet();
@@ -130,8 +130,16 @@ public class Software extends ContainersCapable<SoftwareList> implements Seriali
 					AtomicInteger successes = new AtomicInteger();
 					cloneFiles.forEach(srcFile -> {
 						try {
-							Path destFile = parentDir.resolve(srcFile.getFileName());
-							Files.deleteIfExists(destFile);
+							Path fileName = srcFile.getFileName();
+							if (!fileName.toString().toLowerCase().endsWith(".chd")) {
+								System.err.println("warning: non chd merging is currently not supported (" + srcFile + ')');
+								return;
+							}
+							Path destFile = parentDir.resolve(fileName);
+							if (Files.exists(destFile)) {
+								System.err.println("warning: " + destFile + " already exists.");
+								return;
+							}
 							Files.move(srcFile, destFile);
 							successes.getAndIncrement();
 						} catch (IOException e) {

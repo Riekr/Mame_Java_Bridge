@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SL_Merge implements Runnable {
 
 	@CommandLine.Option(names = {"-t", "--dry-run"}, descriptionKey = "dryrun")
-	public boolean dryRun = false;
+	public boolean dryRun = true;
 
 	@CommandLine.Mixin
 	public @NotNull SoftwareFilters softwareFilters = new SoftwareFilters();

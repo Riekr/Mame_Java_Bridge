@@ -1,9 +1,7 @@
 package com.riekr.mame.beans;
 
 import com.riekr.mame.attrs.AvailabilityCapable;
-import com.riekr.mame.tools.Mame;
-import com.riekr.mame.utils.MameXmlChildOf;
-import com.riekr.mame.utils.Sync;
+import com.riekr.mame.attrs.ContainersCapable;
 import org.jetbrains.annotations.NotNull;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -11,12 +9,13 @@ import javax.xml.bind.annotation.XmlElement;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Serializable, AvailabilityCapable {
+public class SoftwareList extends ContainersCapable<SoftwareLists> implements Serializable, AvailabilityCapable {
 
 	@XmlAttribute
 	public String name;
@@ -27,8 +26,6 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 	@XmlElement(name = "software")
 	private List<Software> _softwares;
 
-	private transient volatile Set<Path> _roots;
-
 	@Override
 	public void setParentNode(@NotNull SoftwareLists parentNode) {
 		super.setParentNode(parentNode);
@@ -38,27 +35,24 @@ public class SoftwareList extends MameXmlChildOf<SoftwareLists> implements Seria
 		}
 	}
 
-	@NotNull
-	public Set<Path> getRoots() {
-		return getRoots(false);
-	}
-
-	@NotNull
-	public Set<Path> getRoots(boolean invalidateCache) {
-		Sync.dcInit(this, () -> _roots == null || invalidateCache, () -> {
-			_roots = new HashSet<>();
-			for (Path romPath : Mame.getInstance().getRomPath()) {
-				Path candidate = romPath.resolve(name);
-				if (Files.isDirectory(candidate))
-					_roots.add(candidate);
+	@Override
+	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
+		HashSet<Path> roots = null;
+		for (Path romPath : getMame().getRomPath()) {
+			Path candidate = romPath.resolve(name);
+			if (Files.isDirectory(candidate)) {
+				if (complete)
+					(roots == null ? roots = new HashSet<>() : roots).add(candidate);
+				else
+					return Collections.singleton(candidate);
 			}
-		});
-		return _roots;
+		}
+		return roots == null ? Collections.emptySet() : roots;
 	}
 
 	@Override
-	public boolean isAvailable(boolean invalidateCache) {
-		return getRoots(invalidateCache).size() > 0;
+	public boolean knownDumpExists() {
+		return true;
 	}
 
 	public Stream<Software> softwares() {

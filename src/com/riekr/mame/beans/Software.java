@@ -2,9 +2,9 @@ package com.riekr.mame.beans;
 
 import com.riekr.mame.attrs.AvailabilityCapable;
 import com.riekr.mame.attrs.Completable;
+import com.riekr.mame.attrs.ContainersCapable;
 import com.riekr.mame.attrs.Mergeable;
 import com.riekr.mame.tools.MameException;
-import com.riekr.mame.utils.MameXmlChildOf;
 import com.riekr.mame.utils.Sync;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -15,14 +15,12 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class Software extends MameXmlChildOf<SoftwareList> implements Serializable, Mergeable, Completable, AvailabilityCapable {
+public class Software extends ContainersCapable<SoftwareList> implements Serializable, Mergeable, Completable, AvailabilityCapable {
 
 	@XmlAttribute
 	public String name;
@@ -45,8 +43,7 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 	@XmlElement(name = "part")
 	private List<SoftwarePart> _parts;
 
-	private volatile           Software  _parent;
-	private transient volatile Set<Path> _roots;
+	private volatile Software _parent;
 
 	@Override
 	public void setParentNode(@NotNull SoftwareList parentNode) {
@@ -59,24 +56,6 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 			for (SoftwarePart p : _parts)
 				p.setParentNode(this);
 		}
-	}
-
-	@NotNull
-	public Set<Path> getRoots() {
-		return getRoots(false);
-	}
-
-	@NotNull
-	public Set<Path> getRoots(boolean invalidateCache) {
-		Sync.dcInit(this, () -> _roots == null || invalidateCache, () -> {
-			_roots = new HashSet<>();
-			for (Path slRoot : getParentNode().getRoots(invalidateCache)) {
-				Path candidate = slRoot.resolve(name);
-				if (Files.isDirectory(candidate))
-					_roots.add(candidate);
-			}
-		});
-		return _roots;
 	}
 
 	@Nullable
@@ -100,8 +79,25 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 	}
 
 	@Override
-	public boolean isAvailable(boolean invalidateCache) {
-		return getRoots(invalidateCache).size() > 0;
+	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
+		Iterator<Path> i = getParentNode().availableContainers(complete, invalidateCache)
+				.map(slRoot -> slRoot.resolve(name))
+				.filter(candidate -> Files.isDirectory(candidate))
+				.iterator();
+		if (!i.hasNext())
+			return Collections.emptySet();
+		if (complete)
+			return Collections.singleton(i.next());
+		Set<Path> files = new HashSet<>();
+		do {
+			files.add(i.next());
+		} while (i.hasNext());
+		return files;
+	}
+
+	@Override
+	public boolean knownDumpExists() {
+		return true;
 	}
 
 	@Override
@@ -123,7 +119,7 @@ public class Software extends MameXmlChildOf<SoftwareList> implements Serializab
 			//noinspection SynchronizationOnLocalVariableOrMethodParameter
 			synchronized (parent) {
 				try {
-					Set<Path> roots = getRoots(invalidateCache);
+					Set<Path> roots = availableContainers(true, invalidateCache).collect(Collectors.toSet());
 					if (roots.size() > 1)
 						throw new MameException("Multiple roots detected for (" + this + ") in " + roots);
 					Path root = roots.iterator().next();

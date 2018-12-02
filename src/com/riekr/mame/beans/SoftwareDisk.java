@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements Serializable, Validable {
@@ -25,17 +26,20 @@ public class SoftwareDisk extends ContainersCapable<SoftwareDiskArea> implements
 
 	@Override
 	protected @NotNull Set<Path> getAvailableContainersImpl(boolean complete, boolean invalidateCache) {
-		Set<Path> files = null;
-		for (Path sRoot : getSoftware().getRoots(invalidateCache)) {
-			Path candidate = sRoot.resolve(name + ".chd");
-			if (Files.isReadable(candidate)) {
-				if (complete)
-					(files == null ? files = new HashSet<>() : files).add(candidate);
-				else
-					return Collections.singleton(candidate);
-			}
-		}
-		return files == null ? Collections.emptySet() : files;
+		Iterator<Path> i = getSoftware()
+				.availableContainers(complete, invalidateCache)
+				.map(sRoot -> sRoot.resolve(name + ".chd"))
+				.filter(Files::exists)
+				.iterator();
+		if (!i.hasNext())
+			return Collections.emptySet();
+		if (complete)
+			return Collections.singleton(i.next());
+		Set<Path> files = new HashSet<>();
+		do {
+			files.add(i.next());
+		} while (i.hasNext());
+		return files;
 	}
 
 	@Override

@@ -1,5 +1,6 @@
 package com.riekr.mame.tools;
 
+import com.riekr.mame.attrs.MachineSearchResult;
 import com.riekr.mame.beans.Machine;
 import com.riekr.mame.beans.Machines;
 import com.riekr.mame.beans.SoftwareList;
@@ -23,9 +24,12 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.*;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.groupingBy;
 
 public class Mame implements Serializable {
 
@@ -141,6 +145,17 @@ public class Mame implements Serializable {
 	@NotNull
 	public Stream<Machine> machines() {
 		return getMachines().all();
+	}
+
+	@NotNull
+	public Stream<Machine> machines(Collection<String> keys) {
+		if (keys == null || keys.isEmpty())
+			return getMachines().all();
+		return getMachines()
+				.search(keys)
+				.collect(groupingBy(MachineSearchResult::getMachine))
+				.keySet()
+				.stream();
 	}
 
 	public String sha1(@NotNull Path file) {

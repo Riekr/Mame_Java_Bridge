@@ -1,9 +1,6 @@
 package com.riekr.mame.beans;
 
-import com.riekr.mame.attrs.AvailabilityCapable;
-import com.riekr.mame.attrs.Completable;
-import com.riekr.mame.attrs.MachineComponent;
-import com.riekr.mame.attrs.Mergeable;
+import com.riekr.mame.attrs.*;
 import com.riekr.mame.tools.MameException;
 import com.riekr.mame.tools.MameXmlChildOf;
 import com.riekr.mame.utils.Sync;
@@ -20,7 +17,7 @@ import java.util.stream.Stream;
 import static com.riekr.mame.beans.enYesNo.no;
 import static com.riekr.mame.beans.enYesNo.yes;
 
-public class Machine extends MameXmlChildOf<Machines> implements Serializable, Mergeable, Completable, AvailabilityCapable {
+public class Machine extends MameXmlChildOf<Machines> implements Serializable, Mergeable, Completable, AvailabilityCapable, MachineSearchResult {
 
 	@XmlAttribute
 	public String name;
@@ -262,5 +259,10 @@ public class Machine extends MameXmlChildOf<Machines> implements Serializable, M
 	@NotNull
 	public enMachineHeritage getHeritage() {
 		return getParentMachine() == null ? enMachineHeritage.PARENT : enMachineHeritage.CLONE;
+	}
+
+	@Override
+	public @NotNull Machine getMachine() {
+		return this;
 	}
 }

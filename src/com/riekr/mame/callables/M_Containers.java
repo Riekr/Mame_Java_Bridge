@@ -1,9 +1,8 @@
 package com.riekr.mame.callables;
 
 import com.riekr.mame.attrs.ContainersCapable;
-import com.riekr.mame.beans.Container;
-import com.riekr.mame.beans.Machine;
 import com.riekr.mame.attrs.MachineComponent;
+import com.riekr.mame.beans.Container;
 import com.riekr.mame.beans.enMachineComponentType;
 import com.riekr.mame.mixins.MachinesFilters;
 import com.riekr.mame.tools.Mame;
@@ -34,14 +33,9 @@ public class M_Containers extends BaseSupplier<Stream<Container<? extends Machin
 		super(mame);
 	}
 
-	private boolean machineName(Machine m) {
-		return names == null || names.isEmpty() || names.contains(m.name);
-	}
-
 	@Override
 	public Stream<Container<? extends MachineComponent>> get() {
-		return _mame.get().machines()
-				.filter(this::machineName)
+		return _mame.get().machines(names)
 				.filter(machinesFilters)
 				.flatMap(machine -> {
 					if (componentType == null)

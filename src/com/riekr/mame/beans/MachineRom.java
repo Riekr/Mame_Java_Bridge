@@ -1,6 +1,7 @@
 package com.riekr.mame.beans;
 
 import com.riekr.mame.attrs.MachineComponent;
+import com.riekr.mame.attrs.MachineSearchResult;
 import com.riekr.mame.attrs.Validable;
 import com.riekr.mame.tools.Mame;
 import com.riekr.mame.utils.FSUtils;
@@ -13,7 +14,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-public class MachineRom extends MachineComponent implements Serializable, Validable {
+public class MachineRom extends MachineComponent implements Serializable, Validable, MachineSearchResult {
 
 	@XmlAttribute
 	public String name;

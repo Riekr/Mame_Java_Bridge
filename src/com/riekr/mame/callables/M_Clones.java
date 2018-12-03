@@ -26,14 +26,9 @@ public class M_Clones extends BaseSupplier<Stream<Machine>> implements Runnable 
 		super(mame);
 	}
 
-	private boolean machineName(Machine m) {
-		return names == null || names.isEmpty() || names.contains(m.name);
-	}
-
 	@Override
 	public Stream<Machine> get() {
-		return _mame.get().machines()
-				.filter(this::machineName)
+		return _mame.get().machines(names)
 				.filter(machinesFilters)
 				.flatMap(Machine::allClones);
 	}

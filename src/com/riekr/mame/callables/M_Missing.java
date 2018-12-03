@@ -48,10 +48,6 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 		super(mame);
 	}
 
-	private boolean machineName(Machine m) {
-		return names == null || names.isEmpty() || names.contains(m.name);
-	}
-
 	private boolean machineRunnable(Machine m) {
 		return runnable == null || m.runnable == runnable;
 	}
@@ -64,8 +60,7 @@ public class M_Missing extends BaseSupplier<Stream<Machine>> implements Runnable
 
 	@Override
 	public Stream<Machine> get() {
-		return parallelOptions.parallelize(_mame.get().machines())
-				.filter(this::machineName)
+		return parallelOptions.parallelize(_mame.get().machines(names))
 				.filter(machinesFilters)
 				.filter(this::machineRunnable)
 				.filter(this::missesAnyComponent);

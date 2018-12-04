@@ -97,7 +97,7 @@ public class Mame implements Serializable {
 		final org.w3c.dom.Element varElement = document.getDocumentElement();
 		final JAXBContext context = JAXBContext.newInstance(clazz);
 		final Unmarshaller unmarshaller = context.createUnmarshaller();
-		unmarshaller.setListener(new MameXmlChildOf.UnmarshallListener(this));
+		unmarshaller.setListener(new MameXmlChildOf.UnmarshalListener(this));
 		final JAXBElement<T> loader = unmarshaller.unmarshal(varElement, clazz);
 		return loader.getValue();
 	}

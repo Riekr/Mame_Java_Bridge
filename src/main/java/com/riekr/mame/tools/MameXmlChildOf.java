@@ -8,10 +8,10 @@ import java.io.Serializable;
 
 public class MameXmlChildOf<ParentType extends Object & Serializable> implements Serializable {
 
-	static class UnmarshallListener extends Unmarshaller.Listener {
+	static class UnmarshalListener extends Unmarshaller.Listener {
 		private final @NotNull Mame _mame;
 
-		public UnmarshallListener(@NotNull Mame mame) {
+		public UnmarshalListener(@NotNull Mame mame) {
 			_mame = mame;
 		}
 
@@ -26,6 +26,7 @@ public class MameXmlChildOf<ParentType extends Object & Serializable> implements
 		}
 	}
 
+	@SuppressWarnings("NullableProblems")
 	private @NotNull ParentType _parentNode;
 
 	@NotNull
